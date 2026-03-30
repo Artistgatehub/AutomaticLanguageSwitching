@@ -29,3 +29,7 @@ native-host/com.automaticlanguageswitching.host.json
 # Local stray/generated files
 automatic-language-switching-extension@*
 tsc
+
+# Installer staging payload
+installer/windows/payload/*
+!installer/windows/payload/.gitkeep

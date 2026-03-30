@@ -1,9 +1,9 @@
 {
   "name": "com.automaticlanguageswitching.host",
   "description": "Native host for Automatic Language Switching",
-  "path": "ABSOLUTE_PATH_TO\\AutomaticLanguageSwitching.NativeHost.exe",
+  "path": "__HOST_EXE_PATH__",
   "type": "stdio",
   "allowed_origins": [
-    "chrome-extension://PASTE_YOUR_UNPACKED_EXTENSION_ID_HERE/"
+    "chrome-extension://__CHROME_EXTENSION_ID__/"
   ]
 }
