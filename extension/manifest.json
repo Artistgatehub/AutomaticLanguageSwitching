@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Automatic Language Switching",
+  "version": "0.1.0",
+  "description": "Restores an assigned keyboard layout when the active Chrome tab changes.",
+  "permissions": [
+    "tabs",
+    "nativeMessaging"
+  ],
+  "background": {
+    "service_worker": "dist/service-worker.js",
+    "type": "module"
+  }
+}

@@ -1,0 +1,31 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vs/
+
+# Local environments
+.venv/
+venv/
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+
+# Node / extension build output
+extension/node_modules/
+extension/dist/
+
+# .NET build output
+**/bin/
+**/obj/
+native-host/publish/
+native-host/publish*/
+
+# Native host local machine manifest
+native-host/com.automaticlanguageswitching.host.json
+
+# Local stray/generated files
+automatic-language-switching-extension@*
+tsc
