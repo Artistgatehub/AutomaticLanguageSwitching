@@ -1,8 +1,5 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
-    [string]$ExtensionId,
-
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA "AutomaticLanguageSwitching\NativeHost"),
 
     [string]$ExtensionInstallDir = (Join-Path $env:LOCALAPPDATA "AutomaticLanguageSwitching\Extension"),
@@ -61,9 +58,7 @@ if (Test-Path $ExtensionSourceDir) {
 }
 
 $manifestTemplate = Get-Content -Path $templatePath -Raw
-$manifestJson = $manifestTemplate.
-    Replace("__HOST_EXE_PATH__", $installedExePath.Replace("\", "\\")).
-    Replace("__CHROME_EXTENSION_ID__", $ExtensionId)
+$manifestJson = $manifestTemplate.Replace("__HOST_EXE_PATH__", $installedExePath.Replace("\", "\\"))
 
 Set-Content -Path $manifestPath -Value $manifestJson -Encoding utf8
 

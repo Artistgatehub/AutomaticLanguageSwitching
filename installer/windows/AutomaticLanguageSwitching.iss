@@ -2,10 +2,6 @@
   #define AppVersion "0.1.0"
 #endif
 
-#ifndef AppExtensionId
-  #error AppExtensionId must be provided before compiling the installer.
-#endif
-
 #define AppName "AutomaticLanguageSwitching"
 #define HostName "com.automaticlanguageswitching.host"
 #define HostExeName "AutomaticLanguageSwitching.NativeHost.exe"
@@ -42,12 +38,12 @@ Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\{#HostName}"; V
 Name: "{group}\AutomaticLanguageSwitching Instructions"; Filename: "{app}\README-FIRST.txt"
 
 [Run]
-Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent unchecked
-Filename: "{code:GetChromeExe}"; Parameters: "chrome://extensions"; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent unchecked nowait; Check: HasChrome
+Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent
+Filename: "{code:GetChromeExe}"; Parameters: "--new-tab chrome://extensions/"; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent nowait; Check: HasChrome
+Filename: "explorer.exe"; Parameters: """{app}\Extension"""; Description: "Open the unpacked extension folder"; Flags: postinstall skipifsilent nowait
 
 [Code]
 const
-  AppExtensionId = '{#AppExtensionId}';
   HostName = '{#HostName}';
   HostExeName = '{#HostExeName}';
 
@@ -115,7 +111,6 @@ begin
 
   ManifestText := ReadTextFile(TemplatePath);
   StringChangeEx(ManifestText, '__HOST_EXE_PATH__', EscapedHostExePath, True);
-  StringChangeEx(ManifestText, '__CHROME_EXTENSION_ID__', AppExtensionId, True);
 
   WriteTextFile(ManifestPath, ManifestText);
 end;

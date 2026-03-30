@@ -6,18 +6,18 @@
 - native host payload already staged in `installer/windows/payload/native-host`
 - unpacked extension payload already staged in `installer/windows/payload/extension-unpacked`
 
-## Required Build-Time Value
+## Stable Extension ID
 
-Before compiling, you must provide:
+The unpacked extension ID is stabilized by the `key` field in `extension/manifest.json`.
 
-- `AppExtensionId`
+The fixed ID is:
 
-This value is used in the generated native messaging host manifest `allowed_origins` entry.
+- `ajeohlkjppfeilfpjkalbleoefanigaf`
 
 ## Compile Example
 
 ```powershell
-iscc.exe /DAppExtensionId=PASTE_EXTENSION_ID_HERE installer\windows\AutomaticLanguageSwitching.iss
+iscc.exe installer\windows\AutomaticLanguageSwitching.iss
 ```
 
 ## What the Installer Includes

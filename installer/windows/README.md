@@ -54,7 +54,7 @@ Prerequisites:
 Compile command example:
 
 ```powershell
-iscc.exe /DAppExtensionId=PASTE_EXTENSION_ID_HERE installer\windows\AutomaticLanguageSwitching.iss
+iscc.exe installer\windows\AutomaticLanguageSwitching.iss
 ```
 
 The generated installer output goes to:
@@ -63,5 +63,6 @@ The generated installer output goes to:
 
 Important:
 
-- `AppExtensionId` must be decided before compiling
+- the unpacked extension ID is stabilized by the `key` field in `extension/manifest.json`
+- the fixed extension ID used by the native host manifest is `ajeohlkjppfeilfpjkalbleoefanigaf`
 - the installer uses the staged payload folders and does not build the native host or extension itself

@@ -22,7 +22,7 @@ For local development:
 
 1. Build the native host.
 2. Confirm the executable path in the manifest `path` field.
-3. Replace `PASTE_YOUR_UNPACKED_EXTENSION_ID_HERE` with the extension ID shown by Chrome after loading the unpacked extension.
+3. Keep the checked-in extension `key` field unchanged so the unpacked extension ID stays stable.
 
 ## Manifest Location for Chrome on Windows
 
@@ -72,7 +72,7 @@ reg add "HKCU\Software\Google\Chrome\NativeMessagingHosts\com.automaticlanguages
 2. Copy `host-manifest.template.json` to `com.automaticlanguageswitching.host.json`.
 3. Replace the manifest `path` with the actual built `.exe` path if needed.
 4. Load the unpacked extension from the `extension/` directory in Chrome.
-5. Copy the Chrome extension ID into the manifest `allowed_origins` entry.
+5. Keep the manifest `allowed_origins` entry aligned with the stable unpacked extension ID from the checked-in manifest key.
 6. Create the `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.automaticlanguageswitching.host` registry entry pointing to that manifest.
 7. Reload the extension.
 8. Open the service worker console and verify `hello_ack` arrives from the host.

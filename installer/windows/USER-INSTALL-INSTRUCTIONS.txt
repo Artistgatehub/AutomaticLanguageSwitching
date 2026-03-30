@@ -12,6 +12,9 @@ Finish setup in Chrome:
 3. Click "Load unpacked"
 4. Select the folder above
 
+The installer also opens that folder in Explorer so it is immediately visible and easy to choose.
+
 Important:
 - The native host registration is already installed for your Windows user
+- The unpacked extension uses a fixed manifest key, so its extension ID stays stable across install locations
 - Chrome still requires the final unpacked-extension step to be completed manually
