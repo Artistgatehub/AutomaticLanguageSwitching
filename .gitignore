@@ -33,3 +33,4 @@ tsc
 # Installer staging payload
 installer/windows/payload/*
 !installer/windows/payload/.gitkeep
+installer/windows/output/

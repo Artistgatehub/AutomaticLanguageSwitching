@@ -42,3 +42,26 @@ Recommended installed paths:
 - package the staged payload folders into a real installer format
 - finalize the end-user guidance flow for loading the unpacked extension in Chrome
 - add signing, versioning, and release automation if needed
+
+## Inno Setup Build Notes
+
+Prerequisites:
+
+- Inno Setup installed on the build machine
+- staged native host payload in `installer/windows/payload/native-host`
+- staged unpacked extension payload in `installer/windows/payload/extension-unpacked`
+
+Compile command example:
+
+```powershell
+iscc.exe /DAppExtensionId=PASTE_EXTENSION_ID_HERE installer\windows\AutomaticLanguageSwitching.iss
+```
+
+The generated installer output goes to:
+
+- `installer/windows/output`
+
+Important:
+
+- `AppExtensionId` must be decided before compiling
+- the installer uses the staged payload folders and does not build the native host or extension itself

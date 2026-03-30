@@ -1,0 +1,17 @@
+AutomaticLanguageSwitching Installation
+
+The native host was installed automatically.
+
+The unpacked Chrome extension folder was placed at:
+%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension
+
+Finish setup in Chrome:
+
+1. Open chrome://extensions
+2. Enable Developer mode
+3. Click "Load unpacked"
+4. Select the folder above
+
+Important:
+- The native host registration is already installed for your Windows user
+- Chrome still requires the final unpacked-extension step to be completed manually

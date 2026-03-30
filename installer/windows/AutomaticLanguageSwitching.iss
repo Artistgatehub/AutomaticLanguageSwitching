@@ -1,0 +1,129 @@
+#ifndef AppVersion
+  #define AppVersion "0.1.0"
+#endif
+
+#ifndef AppExtensionId
+  #error AppExtensionId must be provided before compiling the installer.
+#endif
+
+#define AppName "AutomaticLanguageSwitching"
+#define HostName "com.automaticlanguageswitching.host"
+#define HostExeName "AutomaticLanguageSwitching.NativeHost.exe"
+#define AppPublisher "Jorjio22"
+
+[Setup]
+AppId={{8B39C0C7-8F2E-4E5C-A2B2-98EF6DB68F8A}
+AppName={#AppName}
+AppVersion={#AppVersion}
+AppPublisher={#AppPublisher}
+DefaultDirName={localappdata}\{#AppName}
+DefaultGroupName={#AppName}
+DisableProgramGroupPage=yes
+PrivilegesRequired=lowest
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
+Compression=lzma
+SolidCompression=yes
+WizardStyle=modern
+OutputDir=output
+OutputBaseFilename=AutomaticLanguageSwitching-Setup
+UninstallDisplayIcon={app}\NativeHost\{#HostExeName}
+
+[Files]
+Source: "payload\native-host\*"; DestDir: "{app}\NativeHost"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "payload\extension-unpacked\*"; DestDir: "{app}\Extension"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "..\..\native-host\host-manifest.template.json"; DestDir: "{app}\NativeHost"; Flags: ignoreversion
+Source: "USER-INSTALL-INSTRUCTIONS.txt"; DestDir: "{app}"; DestName: "README-FIRST.txt"; Flags: ignoreversion
+
+[Registry]
+Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\{#HostName}"; ValueType: string; ValueName: ""; ValueData: "{app}\NativeHost\{#HostName}.json"; Flags: uninsdeletekey
+
+[Icons]
+Name: "{group}\AutomaticLanguageSwitching Instructions"; Filename: "{app}\README-FIRST.txt"
+
+[Run]
+Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent unchecked
+Filename: "{code:GetChromeExe}"; Parameters: "chrome://extensions"; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent unchecked nowait; Check: HasChrome
+
+[Code]
+const
+  AppExtensionId = '{#AppExtensionId}';
+  HostName = '{#HostName}';
+  HostExeName = '{#HostExeName}';
+
+function ReadTextFile(const FileName: string): string;
+var
+  Content: AnsiString;
+begin
+  if not LoadStringFromFile(FileName, Content) then
+    RaiseException('Failed to read file: ' + FileName);
+  Result := Content;
+end;
+
+procedure WriteTextFile(const FileName: string; const Content: string);
+begin
+  if not SaveStringToFile(FileName, Content, False) then
+    RaiseException('Failed to write file: ' + FileName);
+end;
+
+function GetChromeExe(Param: string): string;
+var
+  Candidate: string;
+begin
+  Candidate := ExpandConstant('{localappdata}\Google\Chrome\Application\chrome.exe');
+  if FileExists(Candidate) then
+  begin
+    Result := Candidate;
+    exit;
+  end;
+
+  Candidate := ExpandConstant('{pf}\Google\Chrome\Application\chrome.exe');
+  if FileExists(Candidate) then
+  begin
+    Result := Candidate;
+    exit;
+  end;
+
+  Candidate := ExpandConstant('{pf32}\Google\Chrome\Application\chrome.exe');
+  if FileExists(Candidate) then
+  begin
+    Result := Candidate;
+    exit;
+  end;
+
+  Result := '';
+end;
+
+function HasChrome: Boolean;
+begin
+  Result := GetChromeExe('') <> '';
+end;
+
+procedure GenerateNativeHostManifest;
+var
+  TemplatePath: string;
+  ManifestPath: string;
+  HostExePath: string;
+  EscapedHostExePath: string;
+  ManifestText: string;
+begin
+  TemplatePath := ExpandConstant('{app}\NativeHost\host-manifest.template.json');
+  ManifestPath := ExpandConstant('{app}\NativeHost\' + HostName + '.json');
+  HostExePath := ExpandConstant('{app}\NativeHost\' + HostExeName);
+  EscapedHostExePath := HostExePath;
+  StringChangeEx(EscapedHostExePath, '\', '\\', True);
+
+  ManifestText := ReadTextFile(TemplatePath);
+  StringChangeEx(ManifestText, '__HOST_EXE_PATH__', EscapedHostExePath, True);
+  StringChangeEx(ManifestText, '__CHROME_EXTENSION_ID__', AppExtensionId, True);
+
+  WriteTextFile(ManifestPath, ManifestText);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+  begin
+    GenerateNativeHostManifest;
+  end;
+end;
