@@ -1,11 +1,21 @@
 [CmdletBinding()]
 param(
-    [string]$ExtensionDir = (Join-Path (Join-Path $PSScriptRoot "..\..") "extension"),
+    [string]$ExtensionDir,
 
-    [string]$OutputDir = (Join-Path $PSScriptRoot "payload\extension-unpacked")
+    [string]$OutputDir
 )
 
 $ErrorActionPreference = "Stop"
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+$repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
+
+if ([string]::IsNullOrWhiteSpace($ExtensionDir)) {
+    $ExtensionDir = Join-Path $repoRoot "extension"
+}
+
+if ([string]::IsNullOrWhiteSpace($OutputDir)) {
+    $OutputDir = Join-Path $scriptDir "payload\extension-unpacked"
+}
 
 $resolvedExtensionDir = (Resolve-Path $ExtensionDir).Path
 $manifestPath = Join-Path $resolvedExtensionDir "manifest.json"

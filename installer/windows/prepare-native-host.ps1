@@ -3,10 +3,15 @@ param(
     [Parameter(Mandatory = $true)]
     [string]$SourceDir,
 
-    [string]$OutputDir = (Join-Path $PSScriptRoot "payload\native-host")
+    [string]$OutputDir
 )
 
 $ErrorActionPreference = "Stop"
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
+
+if ([string]::IsNullOrWhiteSpace($OutputDir)) {
+    $OutputDir = Join-Path $scriptDir "payload\native-host"
+}
 
 $resolvedSourceDir = (Resolve-Path $SourceDir).Path
 $hostExePath = Join-Path $resolvedSourceDir "AutomaticLanguageSwitching.NativeHost.exe"

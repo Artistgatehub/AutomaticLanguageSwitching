@@ -15,15 +15,16 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+$scriptDir = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Parent $MyInvocation.MyCommand.Path }
 
 $hostName = "com.automaticlanguageswitching.host"
 $hostExeName = "AutomaticLanguageSwitching.NativeHost.exe"
 $registryKey = "HKCU:\Software\Google\Chrome\NativeMessagingHosts\$hostName"
-$repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$repoRoot = (Resolve-Path (Join-Path $scriptDir "..\..")).Path
 $templatePath = Join-Path $repoRoot "native-host\host-manifest.template.json"
 $manifestPath = Join-Path $InstallDir "$hostName.json"
 $installedExePath = Join-Path $InstallDir $hostExeName
-$payloadRoot = Join-Path $PSScriptRoot "payload"
+$payloadRoot = Join-Path $scriptDir "payload"
 
 if ([string]::IsNullOrWhiteSpace($NativeHostSourceDir)) {
     $NativeHostSourceDir = Join-Path $payloadRoot "native-host"
