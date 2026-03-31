@@ -4,6 +4,28 @@ AutomaticLanguageSwitching is a Windows-only project that remembers the active W
 
 It uses a Chrome extension together with a Windows Native Messaging host. The extension detects tab switches, and the native host reads and restores the current Windows keyboard layout.
 
+## Quick Start
+
+1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
+2. Run the installer.
+3. Open `chrome://extensions` if it does not open automatically.
+4. Enable Developer mode, click Load unpacked, and select:
+   `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+
+## Installation
+
+1. Download `AutomaticLanguageSwitching-Setup.exe` from the GitHub Releases page.
+2. Run the installer.
+3. After installation, open `chrome://extensions` in Chrome.
+   If it does not open automatically, open it manually.
+4. In Chrome:
+   1. Enable Developer mode.
+   2. Click Load unpacked.
+   3. Select:
+      `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+
+The installer sets up the Windows native host and places the Chrome extension files locally, but the final Chrome Load unpacked step is still manual.
+
 ## Current Status
 
 The core feature is currently working.
@@ -22,14 +44,12 @@ Verified working layouts:
 - In-memory tab layout tracking during the current session
 - Basic diagnostic logging for development and troubleshooting
 
-## Current Limitations
+## Known Limitations
 
 - Windows-only
 - Chrome-only
-- No persistence across restart yet
-- No settings UI yet
-- No packaged installer yet
-- Local setup is still manual for development
+- Chrome still requires the final Load unpacked step manually
+- Automatic opening of `chrome://extensions` may still need refinement
 
 ## How It Works
 
@@ -69,16 +89,15 @@ See the `docs/` folder for current development notes.
 
 Planned future work, not all implemented yet:
 
-- Better setup and installation workflow
 - Cleaner local developer onboarding
 - Persistence across restart
 - Broader testing and validation
 - Potential user-facing configuration later
 
-## Distribution Plan
+## Distribution
 
-The current plan is GitHub-first distribution.
+The project is currently distributed through GitHub Releases.
 
-- Source code and development progress will live on GitHub first
-- A packaged `installer.exe` is planned later
+- Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases
+- Source code and development progress live in this repository
 - No Chrome Web Store distribution is planned right now
