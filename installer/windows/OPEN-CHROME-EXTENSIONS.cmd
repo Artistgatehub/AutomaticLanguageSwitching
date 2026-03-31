@@ -25,7 +25,7 @@ if exist "%CHROME%" goto launch
 exit /b 0
 
 :launch
-start "" "%CHROME%" --new-tab "%URL%" >nul 2>&1
+start "" "%CHROME%" "%URL%" >nul 2>&1
 exit /b 0
 
 :read_app_path
