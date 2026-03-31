@@ -40,7 +40,7 @@ Name: "{group}\AutomaticLanguageSwitching Instructions"; Filename: "{app}\README
 
 [Run]
 Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent
-Filename: "{app}\OPEN-CHROME-EXTENSIONS.cmd"; Description: "Open chrome://extensions"; Flags: postinstall shellexec skipifsilent
+Filename: "{cmd}"; Parameters: "/c ""{app}\OPEN-CHROME-EXTENSIONS.cmd"""; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent nowait
 Filename: "{app}\Extension"; Description: "Open the unpacked extension folder"; Flags: postinstall shellexec skipifsilent
 
 [Code]
