@@ -13,7 +13,8 @@ Finish setup in Chrome:
 4. Select the folder above
 
 The installer also opens that folder in Explorer so it is immediately visible and easy to choose.
-The installer also attempts to open chrome://extensions for you.
+The installer also tries to open chrome://extensions for you.
+If that page does not open automatically, open it manually in Chrome.
 
 Important:
 - The native host registration is already installed for your Windows user

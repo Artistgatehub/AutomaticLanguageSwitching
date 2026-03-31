@@ -8,17 +8,22 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
 
 1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
 2. Run the installer.
-3. Open `chrome://extensions` if it does not open automatically.
-4. Enable Developer mode, click Load unpacked, and select:
+3. Read the local instructions opened by the installer and use the opened Extension folder in Explorer.
+4. If `chrome://extensions` does not open automatically, open it manually.
+5. Enable Developer mode, click Load unpacked, and select:
    `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
 
 ## Installation
 
 1. Download `AutomaticLanguageSwitching-Setup.exe` from the GitHub Releases page.
 2. Run the installer.
-3. After installation, open `chrome://extensions` in Chrome.
-   If it does not open automatically, open it manually.
-4. In Chrome:
+3. The installer:
+   1. installs the Windows native host
+   2. opens local installation instructions
+   3. opens the installed Extension folder in Explorer
+   4. attempts to open `chrome://extensions`
+4. If `chrome://extensions` does not open automatically, open it manually in Chrome.
+5. In Chrome:
    1. Enable Developer mode.
    2. Click Load unpacked.
    3. Select:
@@ -48,8 +53,8 @@ Verified working layouts:
 
 - Windows-only
 - Chrome-only
+- Automatic opening of `chrome://extensions` after installation may not work reliably on some Windows setups
 - Chrome still requires the final Load unpacked step manually
-- Automatic opening of `chrome://extensions` may still need refinement
 
 ## How It Works
 
