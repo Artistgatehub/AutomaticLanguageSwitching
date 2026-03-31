@@ -30,6 +30,7 @@ Source: "payload\native-host\*"; DestDir: "{app}\NativeHost"; Flags: ignoreversi
 Source: "payload\extension-unpacked\*"; DestDir: "{app}\Extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\..\native-host\host-manifest.template.json"; DestDir: "{app}\NativeHost"; Flags: ignoreversion
 Source: "USER-INSTALL-INSTRUCTIONS.txt"; DestDir: "{app}"; DestName: "README-FIRST.txt"; Flags: ignoreversion
+Source: "OPEN-CHROME-EXTENSIONS.cmd"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\{#HostName}"; ValueType: string; ValueName: ""; ValueData: "{app}\NativeHost\{#HostName}.json"; Flags: uninsdeletekey
@@ -39,8 +40,8 @@ Name: "{group}\AutomaticLanguageSwitching Instructions"; Filename: "{app}\README
 
 [Run]
 Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent
-Filename: "{code:GetChromeExe}"; Parameters: "--new-tab chrome://extensions/"; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent nowait; Check: HasChrome
-Filename: "explorer.exe"; Parameters: """{app}\Extension"""; Description: "Open the unpacked extension folder"; Flags: postinstall skipifsilent nowait
+Filename: "{app}\OPEN-CHROME-EXTENSIONS.cmd"; Description: "Open chrome://extensions"; Flags: postinstall shellexec skipifsilent
+Filename: "{app}\Extension"; Description: "Open the unpacked extension folder"; Flags: postinstall shellexec skipifsilent
 
 [Code]
 const
@@ -60,39 +61,6 @@ procedure WriteTextFile(const FileName: string; const Content: string);
 begin
   if not SaveStringToFile(FileName, Content, False) then
     RaiseException('Failed to write file: ' + FileName);
-end;
-
-function GetChromeExe(Param: string): string;
-var
-  Candidate: string;
-begin
-  Candidate := ExpandConstant('{localappdata}\Google\Chrome\Application\chrome.exe');
-  if FileExists(Candidate) then
-  begin
-    Result := Candidate;
-    exit;
-  end;
-
-  Candidate := ExpandConstant('{pf}\Google\Chrome\Application\chrome.exe');
-  if FileExists(Candidate) then
-  begin
-    Result := Candidate;
-    exit;
-  end;
-
-  Candidate := ExpandConstant('{pf32}\Google\Chrome\Application\chrome.exe');
-  if FileExists(Candidate) then
-  begin
-    Result := Candidate;
-    exit;
-  end;
-
-  Result := '';
-end;
-
-function HasChrome: Boolean;
-begin
-  Result := GetChromeExe('') <> '';
 end;
 
 procedure GenerateNativeHostManifest;

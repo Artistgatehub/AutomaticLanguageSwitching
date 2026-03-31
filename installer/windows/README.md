@@ -66,3 +66,4 @@ Important:
 - the unpacked extension ID is stabilized by the `key` field in `extension/manifest.json`
 - the fixed extension ID used by the native host manifest is `ajeohlkjppfeilfpjkalbleoefanigaf`
 - the installer uses the staged payload folders and does not build the native host or extension itself
+- post-install Chrome navigation uses a bundled helper script that tries common Chrome executable locations before falling back to the `chrome://extensions/` URL
