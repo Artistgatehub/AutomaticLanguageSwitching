@@ -29,6 +29,8 @@ native-host/com.automaticlanguageswitching.host.json
 # Local stray/generated files
 automatic-language-switching-extension@*
 tsc
+als_branding_icons*.zip
+als_branding_icons_extracted/
 
 # Installer staging payload
 installer/windows/payload/*
