@@ -12,7 +12,6 @@ When the user runs `AutomaticLanguageSwitching-Setup.exe`, it:
 4. place a ready-to-load unpacked Chrome extension folder in a predictable local path
 5. open a local instructions page
 6. open the unpacked extension folder in Explorer
-7. attempt to open `chrome://extensions`
 
 Recommended unpacked extension install path:
 
@@ -24,7 +23,7 @@ Recommended unpacked extension install path:
 
 Normal Chrome users still need to complete the final Chrome steps themselves:
 
-1. open `chrome://extensions` manually if it did not open automatically
+1. open `chrome://extensions` manually
 2. enable Developer mode on `chrome://extensions`
 3. click `Load unpacked`
 4. select the prepared extension folder
@@ -45,6 +44,6 @@ The installer should clearly show:
 
 - where the unpacked extension folder was placed
 - that the native host was installed automatically
-- that opening `chrome://extensions` is best-effort and may require manual fallback
+- that the user must open `chrome://extensions` manually
 - that Chrome still requires the final `Load unpacked` step
 - the exact folder the user should select

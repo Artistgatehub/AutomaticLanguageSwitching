@@ -30,7 +30,6 @@ Source: "payload\native-host\*"; DestDir: "{app}\NativeHost"; Flags: ignoreversi
 Source: "payload\extension-unpacked\*"; DestDir: "{app}\Extension"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "..\..\native-host\host-manifest.template.json"; DestDir: "{app}\NativeHost"; Flags: ignoreversion
 Source: "USER-INSTALL-INSTRUCTIONS.txt"; DestDir: "{app}"; DestName: "README-FIRST.txt"; Flags: ignoreversion
-Source: "OPEN-CHROME-EXTENSIONS.cmd"; DestDir: "{app}"; Flags: ignoreversion
 
 [Registry]
 Root: HKCU; Subkey: "Software\Google\Chrome\NativeMessagingHosts\{#HostName}"; ValueType: string; ValueName: ""; ValueData: "{app}\NativeHost\{#HostName}.json"; Flags: uninsdeletekey
@@ -40,7 +39,6 @@ Name: "{group}\AutomaticLanguageSwitching Instructions"; Filename: "{app}\README
 
 [Run]
 Filename: "{app}\README-FIRST.txt"; Description: "Open installation instructions"; Flags: postinstall shellexec skipifsilent
-Filename: "{cmd}"; Parameters: "/c ""{app}\OPEN-CHROME-EXTENSIONS.cmd"""; Description: "Open chrome://extensions"; Flags: postinstall skipifsilent nowait
 Filename: "{app}\Extension"; Description: "Open the unpacked extension folder"; Flags: postinstall shellexec skipifsilent
 
 [Code]

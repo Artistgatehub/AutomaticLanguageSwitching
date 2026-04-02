@@ -9,7 +9,7 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
 1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
 2. Run the installer.
 3. Read the local instructions opened by the installer and use the opened Extension folder in Explorer.
-4. If `chrome://extensions` does not open automatically, open it manually.
+4. Open `chrome://extensions` manually in Chrome.
 5. Enable Developer mode, click Load unpacked, and select:
    `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
 
@@ -22,8 +22,7 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
    2. tries to enable the Windows setting to use a different input method for each app window
    3. opens local installation instructions
    4. opens the installed Extension folder in Explorer
-   5. attempts to open `chrome://extensions`
-4. If `chrome://extensions` does not open automatically, open it manually in Chrome.
+4. Open `chrome://extensions` manually in Chrome.
 5. In Chrome:
    1. Enable Developer mode.
    2. Click Load unpacked.
@@ -56,7 +55,6 @@ Verified working layouts:
 
 - Windows-only
 - Chrome-only
-- Automatic opening of `chrome://extensions` after installation may not work reliably on some Windows setups
 - Chrome still requires the final Load unpacked step manually
 
 ## How It Works
