@@ -1,0 +1,112 @@
+name: Bug report
+description: Report a reproducible problem with AutomaticLanguageSwitching.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Briefly describe the problem.
+      placeholder: The keyboard layout is not restored when I switch back to a tab...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened
+      description: Describe the actual behavior you observed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: Describe what you expected to happen instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps
+      description: List the smallest set of steps needed to reproduce the issue.
+      placeholder: |
+        1. Load the unpacked extension in Chrome
+        2. Open two tabs
+        3. Change layout in tab A
+        4. Switch to tab B and back
+    validations:
+      required: true
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 23H2
+
+  - type: input
+    id: chrome-version
+    attributes:
+      label: Chrome version
+      placeholder: 135.0.x
+
+  - type: input
+    id: project-version
+    attributes:
+      label: Project or release version
+      description: If known, for example v0.2.0.
+      placeholder: v0.2.0
+
+  - type: dropdown
+    id: install-method
+    attributes:
+      label: Install method
+      options:
+        - Windows installer + unpacked extension
+        - Local development setup
+        - Unclear
+    validations:
+      required: true
+
+  - type: dropdown
+    id: extension-load
+    attributes:
+      label: Extension loading method
+      options:
+        - Loaded unpacked in Chrome
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: native-host
+    attributes:
+      label: Native host status
+      options:
+        - Installed / expected to be active
+        - Not installed
+        - Not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: per-app-setting
+    attributes:
+      label: Windows per-app input setting
+      description: "Settings > Time & language > Typing > Advanced keyboard settings > Let me use a different input method for each app window"
+      options:
+        - Enabled
+        - Disabled
+        - Not sure
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or screenshots
+      description: Paste relevant service worker logs, native host logs, screenshots, or error messages if available.
+      render: text
+

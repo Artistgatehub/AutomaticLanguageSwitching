@@ -8,11 +8,13 @@
 
 AutomaticLanguageSwitching is a Windows-only tool for multilingual Chrome users who switch keyboard layouts often. It remembers the active Windows keyboard layout for each Chrome tab during the current browser session and restores that layout when you return to the tab.
 
-It works through a Chrome extension plus a Windows Native Messaging host. The installer sets up the native host and prepares the unpacked extension folder locally; the final Chrome `Load unpacked` step is still manual.
+It works through a Chrome extension plus a Windows Native Messaging host. The installer sets up the native host and prepares the unpacked extension folder locally, but the final Chrome `Load unpacked` step is still manual.
 
 ## Demo
 
 ![AutomaticLanguageSwitching demo](assets/readme/demo-tab-switch.png)
+
+The extension remembers the layout used in each tab and restores it when you switch back.
 
 ## Problem It Solves
 
@@ -28,17 +30,16 @@ AutomaticLanguageSwitching reduces that friction by remembering the layout you u
 
 ## Key Features
 
-- Per-tab keyboard layout memory for the current Chrome session
-- Automatic restore when switching between Chrome tabs
-- Automatic restore when returning from another Windows application to the same Chrome tab
-- Windows Native Messaging host installed by the Windows installer
-- Best-effort enablement of the Windows setting for separate input methods per app window
-- Runtime re-check and best-effort self-healing of that Windows setting
+- Tracks the active Chrome tab
+- Remembers and restores the Windows keyboard layout per tab during the current Chrome session
+- Restores the remembered layout when you switch between tabs
+- Restores the remembered layout when focus returns from another Windows application to the current Chrome tab
+- Works through a Windows Native Messaging host connected to the Chrome extension
+- Installer best-effort enables the Windows setting for separate input methods per app window
+- Native host re-checks that setting at runtime and tries to recover it if needed
 - Lightweight logging for troubleshooting
 
 ## How It Works
-
-At a high level:
 
 1. The extension watches the active Chrome tab.
 2. When you switch tabs, it notifies the Windows native host.
@@ -60,13 +61,10 @@ At a high level:
 4. Open `chrome://extensions` manually in Chrome.
 5. Enable `Developer mode`.
 6. Click `Load unpacked`.
-7. Select:
-   `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+7. Select `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`.
 8. If the toolbar icon is not visible, open Chrome's Extensions menu and pin `Automatic Language Switching` manually.
 
 ## Usage
-
-After installation:
 
 1. Open normal web pages in Chrome.
 2. Use the keyboard layout you want in each tab.
@@ -90,11 +88,9 @@ The extension remembers layouts during the current Chrome session and restores t
 
 If layout restore is inconsistent:
 
-1. Confirm the extension is loaded from:
-   `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+1. Confirm the extension is loaded from `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`.
 2. Confirm the native host was installed successfully.
-3. Check that this Windows setting is enabled:
-   `Settings > Time & language > Typing > Advanced keyboard settings > Let me use a different input method for each app window`
+3. Check that this Windows setting is enabled: `Settings > Time & language > Typing > Advanced keyboard settings > Let me use a different input method for each app window`.
 4. If the toolbar icon is not visible, pin the extension manually from Chrome's Extensions menu.
 5. Reload the unpacked extension in `chrome://extensions` after updating or reinstalling.
 6. Test on normal web pages rather than restricted Chrome pages such as `chrome://` pages or the Chrome Web Store.
