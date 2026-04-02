@@ -4,6 +4,10 @@ AutomaticLanguageSwitching is a Windows-only tool for multilingual Chrome users 
 
 It works through a Chrome extension plus a Windows Native Messaging host. The installer sets up the native host and prepares the unpacked extension folder locally; the final Chrome `Load unpacked` step is still manual.
 
+## Demo
+
+![AutomaticLanguageSwitching demo](assets/readme/demo-tab-switch.png)
+
 ## The Problem It Solves
 
 If you work across multiple languages, different tabs often imply different expected layouts:
