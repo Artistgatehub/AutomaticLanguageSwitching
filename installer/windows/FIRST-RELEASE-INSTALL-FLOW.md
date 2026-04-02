@@ -8,10 +8,11 @@ When the user runs `AutomaticLanguageSwitching-Setup.exe`, it:
 
 1. install the Windows native host files
 2. register the Chrome Native Messaging host for the current user
-3. place a ready-to-load unpacked Chrome extension folder in a predictable local path
-4. open a local instructions page
-5. open the unpacked extension folder in Explorer
-6. attempt to open `chrome://extensions`
+3. best-effort enable the Windows setting to use a different input method for each app window for the current user
+4. place a ready-to-load unpacked Chrome extension folder in a predictable local path
+5. open a local instructions page
+6. open the unpacked extension folder in Explorer
+7. attempt to open `chrome://extensions`
 
 Recommended unpacked extension install path:
 
@@ -27,6 +28,8 @@ Normal Chrome users still need to complete the final Chrome steps themselves:
 2. enable Developer mode on `chrome://extensions`
 3. click `Load unpacked`
 4. select the prepared extension folder
+5. if Windows still does not keep separate input methods per app window, enable that setting manually in:
+   `Settings > Time & language > Typing > Advanced keyboard settings`
 
 ## Why Manual Chrome Steps Still Remain
 

@@ -23,6 +23,25 @@ $manifestPath = Join-Path $InstallDir "$hostName.json"
 $installedExePath = Join-Path $InstallDir $hostExeName
 $payloadRoot = Join-Path $scriptDir "payload"
 
+Add-Type -TypeDefinition @"
+using System;
+using System.Runtime.InteropServices;
+
+public static class AlsUser32
+{
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    public static extern bool SystemParametersInfo(
+        uint uiAction,
+        uint uiParam,
+        ref int pvParam,
+        uint fWinIni);
+}
+"@
+
+$SPI_SETTHREADLOCALINPUTSETTINGS = 0x104F
+$SPIF_UPDATEINIFILE = 0x01
+$SPIF_SENDCHANGE = 0x02
+
 if ([string]::IsNullOrWhiteSpace($NativeHostSourceDir)) {
     $NativeHostSourceDir = Join-Path $payloadRoot "native-host"
 }
@@ -63,6 +82,21 @@ $manifestJson = $manifestTemplate.Replace("__HOST_EXE_PATH__", $installedExePath
 Set-Content -Path $manifestPath -Value $manifestJson -Encoding utf8
 
 reg.exe add "HKCU\Software\Google\Chrome\NativeMessagingHosts\$hostName" /ve /t REG_SZ /d $manifestPath /f | Out-Null
+
+$threadLocalInputEnabled = 1
+$perAppInputResult = [AlsUser32]::SystemParametersInfo(
+    $SPI_SETTHREADLOCALINPUTSETTINGS,
+    0,
+    [ref]$threadLocalInputEnabled,
+    ($SPIF_UPDATEINIFILE -bor $SPIF_SENDCHANGE)
+)
+
+if ($perAppInputResult) {
+    Write-Host "Enabled Windows per-app input method setting for the current user."
+} else {
+    $lastError = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+    Write-Warning "Failed to enable Windows per-app input method setting automatically. Win32Error=$lastError"
+}
 
 Write-Host "Installed native host to: $InstallDir"
 Write-Host "Manifest written to: $manifestPath"

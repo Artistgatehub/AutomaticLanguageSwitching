@@ -25,6 +25,12 @@ internal sealed class MessagePayload
     [JsonPropertyName("platform")]
     public string? Platform { get; init; }
 
+    [JsonPropertyName("perAppInputMethodEnabled")]
+    public bool? PerAppInputMethodEnabled { get; init; }
+
+    [JsonPropertyName("attemptedAutoEnable")]
+    public bool? AttemptedAutoEnable { get; init; }
+
     [JsonPropertyName("windowId")]
     public int? WindowId { get; init; }
 

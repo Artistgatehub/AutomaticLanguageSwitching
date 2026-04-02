@@ -47,6 +47,12 @@ Filename: "{app}\Extension"; Description: "Open the unpacked extension folder"; 
 const
   HostName = '{#HostName}';
   HostExeName = '{#HostExeName}';
+  SPI_SETTHREADLOCALINPUTSETTINGS = $104F;
+  SPIF_UPDATEINIFILE = $01;
+  SPIF_SENDCHANGE = $02;
+
+function SystemParametersInfo(uiAction: UINT; uiParam: UINT; var pvParam: Integer; fWinIni: UINT): BOOL;
+  external 'SystemParametersInfoW@user32.dll stdcall';
 
 function ReadTextFile(const FileName: string): string;
 var
@@ -83,10 +89,31 @@ begin
   WriteTextFile(ManifestPath, ManifestText);
 end;
 
+procedure EnablePerAppInputMethodBestEffort;
+var
+  Enabled: Integer;
+begin
+  Enabled := 1;
+
+  if SystemParametersInfo(
+       SPI_SETTHREADLOCALINPUTSETTINGS,
+       0,
+       Enabled,
+       SPIF_UPDATEINIFILE or SPIF_SENDCHANGE) then
+  begin
+    Log('Enabled per-app input method setting for the current user.');
+  end
+  else
+  begin
+    Log('Failed to enable per-app input method setting.');
+  end;
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
     GenerateNativeHostManifest;
+    EnablePerAppInputMethodBestEffort;
   end;
 end;

@@ -19,9 +19,10 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
 2. Run the installer.
 3. The installer:
    1. installs the Windows native host
-   2. opens local installation instructions
-   3. opens the installed Extension folder in Explorer
-   4. attempts to open `chrome://extensions`
+   2. tries to enable the Windows setting to use a different input method for each app window
+   3. opens local installation instructions
+   4. opens the installed Extension folder in Explorer
+   5. attempts to open `chrome://extensions`
 4. If `chrome://extensions` does not open automatically, open it manually in Chrome.
 5. In Chrome:
    1. Enable Developer mode.
@@ -30,6 +31,8 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
       `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
 
 The installer sets up the Windows native host and places the Chrome extension files locally, but the final Chrome Load unpacked step is still manual.
+If layout restore is still inconsistent when returning from other Windows apps, confirm this Windows setting is enabled:
+`Settings > Time & language > Typing > Advanced keyboard settings > Let me use a different input method for each app window`
 
 ## Current Status
 

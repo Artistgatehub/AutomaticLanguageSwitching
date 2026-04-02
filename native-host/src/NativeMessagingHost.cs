@@ -14,12 +14,14 @@ internal sealed class NativeMessagingHost
     private readonly Stream _output;
     private readonly Dictionary<TabKey, string> _rememberedLayouts = new();
     private readonly KeyboardLayoutService _keyboardLayoutService = new();
+    private readonly PerAppInputMethodStatus _perAppInputMethodStatus;
     private TabKey? _currentActiveTab;
 
     public NativeMessagingHost(Stream input, Stream output)
     {
         _input = input;
         _output = output;
+        _perAppInputMethodStatus = EnsurePerAppInputMethodSetting();
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
@@ -55,12 +57,32 @@ internal sealed class NativeMessagingHost
                     Payload = new MessagePayload
                     {
                         HostVersion = "0.1.0",
-                        Platform = "windows"
+                        Platform = "windows",
+                        PerAppInputMethodEnabled = _perAppInputMethodStatus.IsEnabled,
+                        AttemptedAutoEnable = _perAppInputMethodStatus.AttemptedAutoEnable
                     }
                 }, cancellationToken);
+
+                if (!_perAppInputMethodStatus.IsEnabled)
+                {
+                    await SendAsync(new HostMessage
+                    {
+                        Version = ProtocolVersion,
+                        Type = "warning",
+                        Payload = new MessagePayload
+                        {
+                            Message = "Windows per-app input method setting is disabled and could not be enabled automatically.",
+                            PerAppInputMethodEnabled = false,
+                            AttemptedAutoEnable = _perAppInputMethodStatus.AttemptedAutoEnable
+                        }
+                    }, cancellationToken);
+                }
                 break;
             case "tab_switched":
                 await HandleTabSwitchedAsync(message, cancellationToken);
+                break;
+            case "chrome_focus_returned":
+                await HandleChromeFocusReturnedAsync(message, cancellationToken);
                 break;
             case "tab_closed":
                 HandleTabClosed(message);
@@ -69,6 +91,31 @@ internal sealed class NativeMessagingHost
                 await SendErrorAsync("Unsupported message type.", cancellationToken);
                 break;
         }
+    }
+
+    private PerAppInputMethodStatus EnsurePerAppInputMethodSetting()
+    {
+        var initialState = _keyboardLayoutService.IsPerAppInputMethodEnabled();
+        if (initialState is true)
+        {
+            return new PerAppInputMethodStatus(true, false);
+        }
+
+        Console.Error.WriteLine(
+            "[als-host] Per-app input method setting is disabled or unreadable. Attempting best-effort enable.");
+
+        var attemptedAutoEnable = _keyboardLayoutService.TryEnablePerAppInputMethod();
+        var finalState = _keyboardLayoutService.IsPerAppInputMethodEnabled();
+
+        if (finalState is true)
+        {
+            Console.Error.WriteLine("[als-host] Per-app input method setting is enabled after startup check.");
+            return new PerAppInputMethodStatus(true, attemptedAutoEnable);
+        }
+
+        Console.Error.WriteLine(
+            "[als-host] Per-app input method setting remains disabled after startup check.");
+        return new PerAppInputMethodStatus(false, attemptedAutoEnable);
     }
 
     private async Task HandleTabSwitchedAsync(HostMessage message, CancellationToken cancellationToken)
@@ -127,6 +174,54 @@ internal sealed class NativeMessagingHost
             return;
         }
 
+        await RestoreRememberedLayoutAsync(currentKey, layoutId, currentLayoutId, cancellationToken);
+        _currentActiveTab = currentKey;
+    }
+
+    private async Task HandleChromeFocusReturnedAsync(HostMessage message, CancellationToken cancellationToken)
+    {
+        Console.Error.WriteLine(
+            $"[als-host] chrome_focus_returned currentWindowId={message.Payload.CurrentWindowId?.ToString() ?? "null"} currentTabId={message.Payload.CurrentTabId?.ToString() ?? "null"}");
+
+        if (_currentActiveTab is null)
+        {
+            Console.Error.WriteLine("[als-host] Ignoring chrome_focus_returned because no active tab is tracked.");
+            return;
+        }
+
+        if (message.Payload.CurrentWindowId is not null &&
+            message.Payload.CurrentTabId is not null)
+        {
+            var reportedCurrentKey = new TabKey(
+                message.Payload.CurrentWindowId.Value,
+                message.Payload.CurrentTabId.Value);
+
+            if (reportedCurrentKey != _currentActiveTab.Value)
+            {
+                Console.Error.WriteLine(
+                    $"[als-host] Ignoring chrome_focus_returned for tab {reportedCurrentKey.WindowId}:{reportedCurrentKey.TabId} because tracked active tab is {_currentActiveTab.Value.WindowId}:{_currentActiveTab.Value.TabId}.");
+                return;
+            }
+        }
+
+        var currentKey = _currentActiveTab.Value;
+        var currentLayoutId = _keyboardLayoutService.GetCurrentLayoutId();
+
+        if (!_rememberedLayouts.TryGetValue(currentKey, out var layoutId))
+        {
+            Console.Error.WriteLine($"[als-host] No remembered layout for focused tab {currentKey.WindowId}:{currentKey.TabId}.");
+            return;
+        }
+
+        await RestoreRememberedLayoutAsync(currentKey, layoutId, currentLayoutId, cancellationToken);
+    }
+
+    private async Task RestoreRememberedLayoutAsync(
+        TabKey currentKey,
+        string layoutId,
+        string? currentLayoutId,
+        CancellationToken cancellationToken)
+    {
         if (string.Equals(layoutId, currentLayoutId, StringComparison.OrdinalIgnoreCase))
         {
             Console.Error.WriteLine(
@@ -144,8 +239,6 @@ internal sealed class NativeMessagingHost
                     Result = "applied"
                 }
             }, cancellationToken);
-
-            _currentActiveTab = currentKey;
             return;
         }
 
@@ -170,8 +263,6 @@ internal sealed class NativeMessagingHost
                 }
             }
         }, cancellationToken);
-
-        _currentActiveTab = currentKey;
     }
 
     private void HandleTabClosed(HostMessage message)
@@ -263,3 +354,7 @@ internal sealed class NativeMessagingHost
         return totalRead;
     }
 }
+
+internal readonly record struct PerAppInputMethodStatus(
+    bool IsEnabled,
+    bool AttemptedAutoEnable);

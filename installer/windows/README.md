@@ -65,5 +65,6 @@ Important:
 - the unpacked extension ID is stabilized by the `key` field in `extension/manifest.json`
 - the fixed extension ID used by the native host manifest is `ajeohlkjppfeilfpjkalbleoefanigaf`
 - the installer uses the staged payload folders and does not build the native host or extension itself
+- the installer best-effort enables Windows per-app input settings for the current user via `SystemParametersInfo(..., SPI_SETTHREADLOCALINPUTSETTINGS, ...)`
 - post-install Chrome navigation uses a bundled helper script that looks for Chrome via `where chrome`, registry App Paths, and standard install locations
 - opening `chrome://extensions` is best-effort and may still require a manual fallback on some Windows setups

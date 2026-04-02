@@ -5,7 +5,9 @@ import {
   HostToExtensionMessage,
   HelloAckMessage,
   LayoutRestoreResultMessage,
+  WarningMessage,
   createHelloMessage,
+  createChromeFocusReturnedMessage,
   createTabClosedMessage,
   createTabSwitchedMessage
 } from "./protocol.js";
@@ -57,7 +59,20 @@ function handleHostMessage(message: HostToExtensionMessage): void {
     case "hello_ack": {
       const m = message as HelloAckMessage;
       log("Native host connected.", m);
+
+      if (m.payload.perAppInputMethodEnabled === false) {
+        log("Windows per-app input method setting is disabled after host startup check.", {
+          attemptedAutoEnable: m.payload.attemptedAutoEnable ?? false
+        });
+      }
+
       void syncCurrentActiveTab();
+      return;
+    }
+
+    case "warning": {
+      const m = message as WarningMessage;
+      log("Native host warning.", m);
       return;
     }
 
@@ -147,6 +162,37 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onStartup.addListener(() => {
   tryConnect();
+});
+
+chrome.runtime.onMessage.addListener((message, sender) => {
+  if (message?.type !== "page_focus_returned") {
+    return;
+  }
+
+  const tabId = sender.tab?.id;
+  const windowId = sender.tab?.windowId;
+
+  if (tabId === undefined || windowId === undefined) {
+    return;
+  }
+
+  chrome.tabs.get(tabId, (tab) => {
+    if (chrome.runtime.lastError) {
+      log("Ignoring page focus return because tab lookup failed.", {
+        tabId,
+        error: chrome.runtime.lastError.message
+      });
+      return;
+    }
+
+    if (!tab.active) {
+      return;
+    }
+
+    lastActiveTabByWindow.set(windowId, tabId);
+    log("Chrome focus returned to active tab.", { windowId, tabId });
+    send(createChromeFocusReturnedMessage(windowId, tabId));
+  });
 });
 
 chrome.tabs.onActivated.addListener((activeInfo) => {

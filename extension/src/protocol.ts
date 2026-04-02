@@ -4,10 +4,12 @@ export const HOST_NAME = "com.automaticlanguageswitching.host";
 export type ExtensionToHostMessage =
   | HelloMessage
   | TabSwitchedMessage
+  | ChromeFocusReturnedMessage
   | TabClosedMessage;
 
 export type HostToExtensionMessage =
   | HelloAckMessage
+  | WarningMessage
   | LayoutRestoreResultMessage
   | ErrorMessage;
 
@@ -29,6 +31,17 @@ export type HelloAckMessage = BaseMessage<
   {
     hostVersion: string;
     platform: string;
+    perAppInputMethodEnabled?: boolean;
+    attemptedAutoEnable?: boolean;
+  }
+>;
+
+export type WarningMessage = BaseMessage<
+  "warning",
+  {
+    message: string;
+    perAppInputMethodEnabled?: boolean;
+    attemptedAutoEnable?: boolean;
   }
 >;
 
@@ -47,6 +60,14 @@ export type TabClosedMessage = BaseMessage<
   {
     windowId: number;
     tabId: number;
+  }
+>;
+
+export type ChromeFocusReturnedMessage = BaseMessage<
+  "chrome_focus_returned",
+  {
+    currentWindowId: number;
+    currentTabId: number;
   }
 >;
 
@@ -103,5 +124,19 @@ export function createTabClosedMessage(
     version: PROTOCOL_VERSION,
     type: "tab_closed",
     payload: { windowId, tabId }
+  };
+}
+
+export function createChromeFocusReturnedMessage(
+  currentWindowId: number,
+  currentTabId: number
+): ChromeFocusReturnedMessage {
+  return {
+    version: PROTOCOL_VERSION,
+    type: "chrome_focus_returned",
+    payload: {
+      currentWindowId,
+      currentTabId
+    }
   };
 }

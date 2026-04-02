@@ -1,6 +1,7 @@
 AutomaticLanguageSwitching Installation
 
 The native host was installed automatically.
+The installer also tries to enable the Windows setting that uses a different input method for each app window.
 
 The unpacked Chrome extension folder was placed at:
 %LOCALAPPDATA%\AutomaticLanguageSwitching\Extension
@@ -19,4 +20,8 @@ If that page does not open automatically, open it manually in Chrome.
 Important:
 - The native host registration is already installed for your Windows user
 - The unpacked extension uses a fixed manifest key, so its extension ID stays stable across install locations
+- If Windows still does not keep separate input methods per app window, open:
+  Settings > Time & language > Typing > Advanced keyboard settings
+  and turn on:
+  Let me use a different input method for each app window
 - Chrome still requires the final unpacked-extension step to be completed manually

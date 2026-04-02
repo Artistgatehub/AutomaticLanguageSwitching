@@ -8,6 +8,10 @@ namespace AutomaticLanguageSwitching.NativeHost;
 
 internal sealed class KeyboardLayoutService
 {
+    private const uint SpiGetThreadLocalInputSettings = 0x104E;
+    private const uint SpiSetThreadLocalInputSettings = 0x104F;
+    private const uint SpifUpdateIniFile = 0x0001;
+    private const uint SpifSendChange = 0x0002;
     private const string KeyboardLayoutRegistryPath = @"Keyboard Layout\Preload";
     private const string KeyboardLayoutSubstitutesRegistryPath = @"Keyboard Layout\Substitutes";
     private static readonly TimeSpan LayoutActivationWaitTimeout = TimeSpan.FromMilliseconds(300);
@@ -61,6 +65,49 @@ internal sealed class KeyboardLayoutService
     public bool IsValidLayoutId(string layoutId)
     {
         return NormalizeLayoutId(layoutId) is not null;
+    }
+
+    public bool? IsPerAppInputMethodEnabled()
+    {
+        var enabled = 0;
+        var success = SystemParametersInfo(
+            SpiGetThreadLocalInputSettings,
+            0,
+            ref enabled,
+            0);
+
+        if (!success)
+        {
+            var error = Marshal.GetLastWin32Error();
+            Console.Error.WriteLine(
+                $"[als-host] Failed to read per-app input method setting. GetLastWin32Error={error}");
+            return null;
+        }
+
+        var isEnabled = enabled != 0;
+        Console.Error.WriteLine($"[als-host] Per-app input method setting enabled={isEnabled}.");
+        return isEnabled;
+    }
+
+    public bool TryEnablePerAppInputMethod()
+    {
+        var enabled = 1;
+        var success = SystemParametersInfo(
+            SpiSetThreadLocalInputSettings,
+            0,
+            ref enabled,
+            SpifUpdateIniFile | SpifSendChange);
+
+        if (!success)
+        {
+            var error = Marshal.GetLastWin32Error();
+            Console.Error.WriteLine(
+                $"[als-host] Failed to enable per-app input method setting. GetLastWin32Error={error}");
+            return false;
+        }
+
+        Console.Error.WriteLine("[als-host] Requested enable of per-app input method setting.");
+        return true;
     }
 
     public string? GetCurrentLayoutId()
@@ -340,6 +387,14 @@ internal sealed class KeyboardLayoutService
         uint fuFlags,
         uint uTimeout,
         out IntPtr lpdwResult);
+
+    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool SystemParametersInfo(
+        uint uiAction,
+        uint uiParam,
+        ref int pvParam,
+        uint fWinIni);
 }
 
 internal enum LayoutSwitchResult
