@@ -48,6 +48,8 @@ At a high level:
 
 ## ⚙️ Installation
 
+![Installation flow](assets/readme/install-load-unpacked.png)
+
 1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
 2. Run the installer.
 3. The installer:
