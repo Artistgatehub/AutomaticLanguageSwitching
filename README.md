@@ -1,5 +1,11 @@
 # AutomaticLanguageSwitching
 
+> Automatically restore your keyboard layout per Chrome tab.
+
+![Windows](https://img.shields.io/badge/platform-Windows-0078D6)
+![Chrome](https://img.shields.io/badge/browser-Chrome-4285F4)
+![Version](https://img.shields.io/badge/version-v0.2.0-2ea44f)
+
 AutomaticLanguageSwitching is a Windows-only tool for multilingual Chrome users who switch keyboard layouts often. It remembers the active Windows keyboard layout for each Chrome tab during the current browser session and restores that layout when you return to the tab.
 
 It works through a Chrome extension plus a Windows Native Messaging host. The installer sets up the native host and prepares the unpacked extension folder locally; the final Chrome `Load unpacked` step is still manual.
@@ -8,7 +14,7 @@ It works through a Chrome extension plus a Windows Native Messaging host. The in
 
 ![AutomaticLanguageSwitching demo](assets/readme/demo-tab-switch.png)
 
-## The Problem It Solves
+## Problem It Solves
 
 If you work across multiple languages, different tabs often imply different expected layouts:
 
@@ -40,7 +46,7 @@ At a high level:
 4. The native host restores the remembered layout for the tab you are entering, if one is known.
 5. When focus returns from another Windows application back to the same Chrome tab, the host restores that tab's remembered layout again.
 
-## Installation
+## ⚙️ Installation
 
 1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
 2. Run the installer.
@@ -67,7 +73,7 @@ After installation:
 
 The extension remembers layouts during the current Chrome session and restores them when you return to tabs that already have a remembered layout.
 
-## Important Notes and Limitations
+## ⚠️ Important Notes and Limitations
 
 - Windows only
 - Chrome only
@@ -78,7 +84,7 @@ The extension remembers layouts during the current Chrome session and restores t
 - Layout memory is not persisted across a full Chrome restart
 - No Chrome Web Store distribution is planned right now
 
-## Troubleshooting
+## 🛠️ Troubleshooting
 
 If layout restore is inconsistent:
 
@@ -93,7 +99,7 @@ If layout restore is inconsistent:
 
 If the Windows per-app input setting was disabled later, the native host will try to enable it again at runtime. If that still fails, the extension logs a warning in the service worker console.
 
-## Current Release and Distribution
+## Release and Distribution
 
 The current public release line is `v0.2.0`.
 
