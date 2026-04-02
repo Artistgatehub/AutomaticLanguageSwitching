@@ -12,6 +12,7 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
 4. Open `chrome://extensions` manually in Chrome.
 5. Enable Developer mode, click Load unpacked, and select:
    `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+6. If the toolbar icon is not visible, open Chrome's Extensions menu and pin `Automatic Language Switching` manually.
 
 ## Installation
 
@@ -28,6 +29,7 @@ It uses a Chrome extension together with a Windows Native Messaging host. The ex
    2. Click Load unpacked.
    3. Select:
       `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+   4. If needed, pin `Automatic Language Switching` from Chrome's Extensions menu so the toolbar icon stays visible.
 
 The installer sets up the Windows native host and places the Chrome extension files locally, but the final Chrome Load unpacked step is still manual.
 If layout restore is still inconsistent when returning from other Windows apps, confirm this Windows setting is enabled:

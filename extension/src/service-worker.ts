@@ -18,6 +18,25 @@ let reconnectDelayMs = 1000;
 
 const MAX_RECONNECT_DELAY_MS = 10000;
 const lastActiveTabByWindow = new Map<number, number>();
+const ACTIVE_ICONS = createIconSet("active");
+const INACTIVE_ICONS = createIconSet("inactive");
+
+function formatTab(windowId: number | null, tabId: number | null): string {
+  return windowId === null || tabId === null ? "null" : `${windowId}:${tabId}`;
+}
+
+function summarizeOutgoingMessage(message: ExtensionToHostMessage): string {
+  switch (message.type) {
+    case "hello":
+      return "hello";
+    case "tab_switched":
+      return `tab_switched prev=${formatTab(message.payload.previousWindowId, message.payload.previousTabId)} current=${formatTab(message.payload.currentWindowId, message.payload.currentTabId)}`;
+    case "chrome_focus_returned":
+      return `chrome_focus_returned current=${formatTab(message.payload.currentWindowId, message.payload.currentTabId)}`;
+    case "tab_closed":
+      return `tab_closed tab=${formatTab(message.payload.windowId, message.payload.tabId)}`;
+  }
+}
 
 function log(message: string, data?: unknown): void {
   if (data === undefined) {
@@ -39,6 +58,26 @@ function clearReconnectTimer(): void {
   }
 }
 
+function createIconSet(
+  state: "active" | "inactive"
+): Record<16 | 32 | 48 | 128, string> {
+  return {
+    16: chrome.runtime.getURL(`icons/icon-${state}-16.png`),
+    32: chrome.runtime.getURL(`icons/icon-${state}-32.png`),
+    48: chrome.runtime.getURL(`icons/icon-${state}-48.png`),
+    128: chrome.runtime.getURL(`icons/icon-${state}-128.png`)
+  };
+}
+
+function setActionIcons(path: chrome.action.TabIconDetails["path"]): void {
+  chrome.action.setIcon({ path }, () => {
+    const error = chrome.runtime.lastError?.message;
+    if (error) {
+      log(`Failed to update extension icon. error=${error}`);
+    }
+  });
+}
+
 function scheduleReconnect(): void {
   if (reconnectTimer !== null) {
     return;
@@ -58,12 +97,14 @@ function handleHostMessage(message: HostToExtensionMessage): void {
   switch (message.type) {
     case "hello_ack": {
       const m = message as HelloAckMessage;
-      log("Native host connected.", m);
+      log(
+        `hello_ack hostVersion=${m.payload.hostVersion ?? "unknown"} platform=${m.payload.platform ?? "unknown"} settingEnabled=${m.payload.perAppInputMethodEnabled ?? "unknown"} autoEnableAttempted=${m.payload.attemptedAutoEnable ?? false}`
+      );
 
       if (m.payload.perAppInputMethodEnabled === false) {
-        log("Windows per-app input method setting is disabled after host startup check.", {
-          attemptedAutoEnable: m.payload.attemptedAutoEnable ?? false
-        });
+        log(
+          `Windows per-app input setting still disabled after startup check. autoEnableAttempted=${m.payload.attemptedAutoEnable ?? false}`
+        );
       }
 
       void syncCurrentActiveTab();
@@ -72,14 +113,16 @@ function handleHostMessage(message: HostToExtensionMessage): void {
 
     case "warning": {
       const m = message as WarningMessage;
-      log("Native host warning.", m);
+      log(
+        `warning message="${m.payload.message}" settingEnabled=${m.payload.perAppInputMethodEnabled ?? "unknown"} autoEnableAttempted=${m.payload.attemptedAutoEnable ?? false}`
+      );
       return;
     }
 
     case "layout_restore_result": {
       const m = message as LayoutRestoreResultMessage;
-      console.log(
-        `[als-extension] restore windowId=${m.payload.windowId} tabId=${m.payload.tabId} layoutId=${m.payload.layoutId} result=${m.payload.result}`
+      log(
+        `restore_result tab=${formatTab(m.payload.windowId, m.payload.tabId)} layout=${m.payload.layoutId} result=${m.payload.result}`
       );
       return;
     }
@@ -107,7 +150,8 @@ function connect(): chrome.runtime.Port | null {
 
     nextPort.onDisconnect.addListener(() => {
       const runtimeError = chrome.runtime.lastError?.message;
-      log("Native host disconnected.", runtimeError);
+      log(`Native host disconnected.${runtimeError ? ` reason=${runtimeError}` : ""}`);
+      setActionIcons(INACTIVE_ICONS);
 
       if (port === nextPort) {
         port = null;
@@ -118,12 +162,15 @@ function connect(): chrome.runtime.Port | null {
 
     clearReconnectTimer();
     nextPort.postMessage(createHelloMessage());
+    log("Outgoing message hello");
     reconnectDelayMs = 1000;
     port = nextPort;
+    setActionIcons(ACTIVE_ICONS);
     log("Connected to native host.");
     return nextPort;
   } catch (error) {
     log("Failed to connect to native host.", error);
+    setActionIcons(INACTIVE_ICONS);
     scheduleReconnect();
     return null;
   }
@@ -137,10 +184,11 @@ function send(message: ExtensionToHostMessage): void {
   const nativePort = connect();
 
   if (!nativePort) {
-    log("Skipping message because native host is unavailable.", message);
+    log(`Skipping outgoing message because native host is unavailable: ${summarizeOutgoingMessage(message)}`);
     return;
   }
 
+  log(`Outgoing message ${summarizeOutgoingMessage(message)}`);
   nativePort.postMessage(message);
 }
 
@@ -178,19 +226,17 @@ chrome.runtime.onMessage.addListener((message, sender) => {
 
   chrome.tabs.get(tabId, (tab) => {
     if (chrome.runtime.lastError) {
-      log("Ignoring page focus return because tab lookup failed.", {
-        tabId,
-        error: chrome.runtime.lastError.message
-      });
+      log(`Focus return ignored: tab lookup failed for ${windowId}:${tabId} error=${chrome.runtime.lastError.message}`);
       return;
     }
 
     if (!tab.active) {
+      log(`Focus return ignored: ${windowId}:${tabId} is no longer active.`);
       return;
     }
 
     lastActiveTabByWindow.set(windowId, tabId);
-    log("Chrome focus returned to active tab.", { windowId, tabId });
+    log(`Focus returned to active tab ${windowId}:${tabId}.`);
     send(createChromeFocusReturnedMessage(windowId, tabId));
   });
 });
@@ -201,7 +247,9 @@ chrome.tabs.onActivated.addListener((activeInfo) => {
 
   lastActiveTabByWindow.set(activeInfo.windowId, activeInfo.tabId);
 
-  log("Active tab changed.", activeInfo);
+  log(
+    `Active tab changed prev=${formatTab(previousWindowId, previousTabId)} current=${formatTab(activeInfo.windowId, activeInfo.tabId)}`
+  );
   send(
     createTabSwitchedMessage(
       previousWindowId,
@@ -221,8 +269,9 @@ chrome.tabs.onRemoved.addListener((tabId, removeInfo) => {
     lastActiveTabByWindow.delete(removeInfo.windowId);
   }
 
-  log("Tab closed.", { tabId, windowId: removeInfo.windowId });
+  log(`Tab closed ${removeInfo.windowId}:${tabId}.`);
   send(createTabClosedMessage(removeInfo.windowId, tabId));
 });
 
+setActionIcons(INACTIVE_ICONS);
 tryConnect();

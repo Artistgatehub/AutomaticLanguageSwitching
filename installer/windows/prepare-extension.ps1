@@ -20,6 +20,7 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
 $resolvedExtensionDir = (Resolve-Path $ExtensionDir).Path
 $manifestPath = Join-Path $resolvedExtensionDir "manifest.json"
 $distDir = Join-Path $resolvedExtensionDir "dist"
+$iconsDir = Join-Path $resolvedExtensionDir "icons"
 
 if (-not (Test-Path $manifestPath)) {
     throw "Extension manifest not found: $manifestPath"
@@ -29,10 +30,15 @@ if (-not (Test-Path $distDir)) {
     throw "Extension dist folder not found: $distDir. Build the extension before preparing the payload."
 }
 
+if (-not (Test-Path $iconsDir)) {
+    throw "Extension icons folder not found: $iconsDir"
+}
+
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 Get-ChildItem -Path $OutputDir -Force | Remove-Item -Recurse -Force
 
 Copy-Item -Path $manifestPath -Destination $OutputDir -Force
 Copy-Item -Path $distDir -Destination $OutputDir -Recurse -Force
+Copy-Item -Path $iconsDir -Destination $OutputDir -Recurse -Force
 
 Write-Host "Prepared unpacked extension payload at: $OutputDir"

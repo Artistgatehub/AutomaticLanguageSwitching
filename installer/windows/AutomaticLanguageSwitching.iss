@@ -1,5 +1,5 @@
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.2.0"
 #endif
 
 #define AppName "AutomaticLanguageSwitching"
@@ -23,6 +23,7 @@ SolidCompression=yes
 WizardStyle=modern
 OutputDir=output
 OutputBaseFilename=AutomaticLanguageSwitching-Setup
+SetupIconFile=assets\app.ico
 UninstallDisplayIcon={app}\NativeHost\{#HostExeName}
 
 [Files]

@@ -36,16 +36,11 @@ internal sealed class KeyboardLayoutService
             if (_installedLayoutIdsCache is not null &&
                 DateTimeOffset.UtcNow - _installedLayoutIdsCachedAt < InstalledLayoutsCacheTtl)
             {
-                Console.Error.WriteLine(
-                    $"[als-host] Installed layouts cache (cached): {string.Join(", ", _installedLayoutIdsCache)}");
                 return _installedLayoutIdsCache;
             }
 
             _installedLayoutIdsCache = ReadInstalledLayoutIds();
             _installedLayoutIdsCachedAt = DateTimeOffset.UtcNow;
-
-            Console.Error.WriteLine(
-                $"[als-host] Installed layouts cache (fresh): {string.Join(", ", _installedLayoutIdsCache)}");
 
             return _installedLayoutIdsCache;
         }
@@ -80,12 +75,12 @@ internal sealed class KeyboardLayoutService
         {
             var error = Marshal.GetLastWin32Error();
             Console.Error.WriteLine(
-                $"[als-host] Failed to read per-app input method setting. GetLastWin32Error={error}");
+                $"[als-host] Windows per-app input setting read failed. win32={error}");
             return null;
         }
 
         var isEnabled = enabled != 0;
-        Console.Error.WriteLine($"[als-host] Per-app input method setting enabled={isEnabled}.");
+        Console.Error.WriteLine($"[als-host] Windows per-app input setting: enabled={isEnabled}.");
         return isEnabled;
     }
 
@@ -102,11 +97,11 @@ internal sealed class KeyboardLayoutService
         {
             var error = Marshal.GetLastWin32Error();
             Console.Error.WriteLine(
-                $"[als-host] Failed to enable per-app input method setting. GetLastWin32Error={error}");
+                $"[als-host] Windows per-app input auto-enable failed. win32={error}");
             return false;
         }
 
-        Console.Error.WriteLine("[als-host] Requested enable of per-app input method setting.");
+        Console.Error.WriteLine("[als-host] Windows per-app input auto-enable requested.");
         return true;
     }
 
@@ -134,7 +129,6 @@ internal sealed class KeyboardLayoutService
         }
 
         var layoutId = (keyboardLayout.ToInt64() & 0xFFFFFFFFL).ToString("X8");
-        Console.Error.WriteLine($"[als-host] Current foreground layoutId={layoutId}");
         return layoutId;
     }
 
@@ -147,10 +141,7 @@ internal sealed class KeyboardLayoutService
             return LayoutSwitchResult.Failed;
         }
 
-        Console.Error.WriteLine($"[als-host] TrySwitchTo requested layoutId={normalized}");
-
-        var visibleLayouts = GetInstalledLayoutIds();
-        Console.Error.WriteLine($"[als-host] Visible layouts before switch: {string.Join(", ", visibleLayouts)}");
+        Console.Error.WriteLine($"[als-host] Restore request layout={normalized}.");
 
         var foregroundWindow = GetForegroundWindow();
         if (foregroundWindow == IntPtr.Zero)
@@ -161,7 +152,7 @@ internal sealed class KeyboardLayoutService
 
         if (!IsChromeForegroundWindow(foregroundWindow))
         {
-            Console.Error.WriteLine("[als-host] TrySwitchTo failed: foreground window is not chrome.exe.");
+            Console.Error.WriteLine("[als-host] Restore ignored: foreground window is not chrome.exe.");
             return LayoutSwitchResult.Failed;
         }
 
@@ -299,15 +290,12 @@ internal sealed class KeyboardLayoutService
             var candidateHandle = LoadKeyboardLayout(candidateKlid, KlfActivate | KlfSubstituteOk);
             if (candidateHandle == IntPtr.Zero)
             {
-                var loadError = Marshal.GetLastWin32Error();
-                Console.Error.WriteLine(
-                    $"[als-host] LoadKeyboardLayout failed for candidate {candidateKlid} while targeting {targetLayoutId}. GetLastWin32Error={loadError}");
+            var loadError = Marshal.GetLastWin32Error();
+            Console.Error.WriteLine(
+                $"[als-host] LoadKeyboardLayout failed for {candidateKlid} while targeting {targetLayoutId}. win32={loadError}");
                 continue;
             }
-
             var candidateLayoutId = NormalizeHkl(candidateHandle);
-            Console.Error.WriteLine(
-                $"[als-host] LoadKeyboardLayout candidate {candidateKlid} produced HKL=0x{candidateHandle.ToInt64():X} normalized={candidateLayoutId ?? "null"}");
 
             if (string.Equals(candidateLayoutId, targetLayoutId, StringComparison.OrdinalIgnoreCase))
             {
@@ -317,7 +305,7 @@ internal sealed class KeyboardLayoutService
         }
 
         Console.Error.WriteLine(
-            $"[als-host] Could not load a keyboard layout handle matching target {targetLayoutId}.");
+            $"[als-host] Restore unavailable: could not load layout {targetLayoutId}.");
         loadedLayout = IntPtr.Zero;
         return false;
     }
@@ -352,7 +340,7 @@ internal sealed class KeyboardLayoutService
             if (string.Equals(currentLayoutId, expectedLayoutId, StringComparison.OrdinalIgnoreCase))
             {
                 Console.Error.WriteLine(
-                    $"[als-host] Observed active layout '{expectedLayoutId}' after restore request.");
+                    $"[als-host] Restore confirmed layout={expectedLayoutId}.");
                 return;
             }
 
@@ -360,7 +348,7 @@ internal sealed class KeyboardLayoutService
         }
 
         Console.Error.WriteLine(
-            $"[als-host] Timed out waiting for layout '{expectedLayoutId}' to become active after restore request.");
+            $"[als-host] Restore wait timed out for layout={expectedLayoutId}.");
     }
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true, EntryPoint = "LoadKeyboardLayoutW")]

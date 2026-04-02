@@ -15,6 +15,7 @@ Finish setup in Chrome:
 
 The installer also opens that folder in Explorer so it is immediately visible and easy to choose.
 Open chrome://extensions manually in Chrome to complete setup.
+If the toolbar icon is not visible, click the Extensions puzzle-piece menu in Chrome and pin Automatic Language Switching manually.
 
 Important:
 - The native host registration is already installed for your Windows user

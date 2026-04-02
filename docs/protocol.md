@@ -23,7 +23,7 @@ Sent once after the extension connects.
   "version": 1,
   "type": "hello",
   "payload": {
-    "extensionVersion": "0.1.0"
+    "extensionVersion": "0.2.0"
   }
 }
 ```
@@ -87,7 +87,7 @@ Sent when Chrome removes a tab. The native host uses it only to clear the in-mem
   "version": 1,
   "type": "hello_ack",
   "payload": {
-    "hostVersion": "0.1.0",
+    "hostVersion": "0.2.0",
     "platform": "windows"
   }
 }

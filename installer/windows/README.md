@@ -68,3 +68,4 @@ Important:
 - the installer best-effort enables Windows per-app input settings for the current user via `SystemParametersInfo(..., SPI_SETTHREADLOCALINPUTSETTINGS, ...)`
 - the installer no longer tries to open Chrome automatically
 - users open `chrome://extensions` manually to complete the unpacked extension step
+- if the toolbar icon is not visible after loading the extension, the user pins it manually from Chrome's Extensions menu

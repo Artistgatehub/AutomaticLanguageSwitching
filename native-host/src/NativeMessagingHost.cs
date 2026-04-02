@@ -26,11 +26,13 @@ internal sealed class NativeMessagingHost
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        Console.Error.WriteLine("[als-host] Native Messaging loop started.");
         while (!cancellationToken.IsCancellationRequested)
         {
             var incoming = await ReadMessageAsync(cancellationToken);
             if (incoming is null)
             {
+                Console.Error.WriteLine("[als-host] Native Messaging input closed.");
                 return;
             }
 
@@ -49,22 +51,25 @@ internal sealed class NativeMessagingHost
         switch (message.Type)
         {
             case "hello":
-                Console.Error.WriteLine($"[als-host] Extension connected. Version={message.Payload.ExtensionVersion ?? "unknown"}.");
+                Console.Error.WriteLine($"[als-host] Hello from extension version={message.Payload.ExtensionVersion ?? "unknown"}.");
                 await SendAsync(new HostMessage
                 {
                     Version = ProtocolVersion,
                     Type = "hello_ack",
                     Payload = new MessagePayload
                     {
-                        HostVersion = "0.1.0",
+                        HostVersion = "0.2.0",
                         Platform = "windows",
                         PerAppInputMethodEnabled = _perAppInputMethodStatus.IsEnabled,
                         AttemptedAutoEnable = _perAppInputMethodStatus.AttemptedAutoEnable
                     }
                 }, cancellationToken);
+                Console.Error.WriteLine(
+                    $"[als-host] hello_ack sent: settingEnabled={_perAppInputMethodStatus.IsEnabled} autoEnableAttempted={_perAppInputMethodStatus.AttemptedAutoEnable}.");
 
                 if (!_perAppInputMethodStatus.IsEnabled)
                 {
+                    Console.Error.WriteLine("[als-host] Warning sent: Windows per-app input setting still disabled.");
                     await SendAsync(new HostMessage
                     {
                         Version = ProtocolVersion,
@@ -98,23 +103,24 @@ internal sealed class NativeMessagingHost
         var initialState = _keyboardLayoutService.IsPerAppInputMethodEnabled();
         if (initialState is true)
         {
+            Console.Error.WriteLine("[als-host] Startup check: Windows per-app input setting already enabled.");
             return new PerAppInputMethodStatus(true, false);
         }
 
-        Console.Error.WriteLine(
-            "[als-host] Per-app input method setting is disabled or unreadable. Attempting best-effort enable.");
+        Console.Error.WriteLine("[als-host] Startup check: Windows per-app input setting disabled or unreadable; trying auto-enable.");
 
         var attemptedAutoEnable = _keyboardLayoutService.TryEnablePerAppInputMethod();
         var finalState = _keyboardLayoutService.IsPerAppInputMethodEnabled();
 
         if (finalState is true)
         {
-            Console.Error.WriteLine("[als-host] Per-app input method setting is enabled after startup check.");
+            Console.Error.WriteLine(
+                $"[als-host] Startup check: Windows per-app input setting enabled after auto-heal. attempted={attemptedAutoEnable}.");
             return new PerAppInputMethodStatus(true, attemptedAutoEnable);
         }
 
         Console.Error.WriteLine(
-            "[als-host] Per-app input method setting remains disabled after startup check.");
+            $"[als-host] Startup check: Windows per-app input setting still disabled. attempted={attemptedAutoEnable}.");
         return new PerAppInputMethodStatus(false, attemptedAutoEnable);
     }
 
@@ -125,9 +131,6 @@ internal sealed class NativeMessagingHost
             await SendErrorAsync("tab_switched requires currentWindowId and currentTabId.", cancellationToken);
             return;
         }
-
-        Console.Error.WriteLine(
-            $"[als-host] tab_switched previousWindowId={message.Payload.PreviousWindowId?.ToString() ?? "null"} previousTabId={message.Payload.PreviousTabId?.ToString() ?? "null"} currentWindowId={message.Payload.CurrentWindowId.Value} currentTabId={message.Payload.CurrentTabId.Value}");
 
         var currentKey = new TabKey(
             message.Payload.CurrentWindowId.Value,
@@ -148,10 +151,12 @@ internal sealed class NativeMessagingHost
             _currentActiveTab.Value != reportedPreviousKey.Value)
         {
             Console.Error.WriteLine(
-                $"[als-host] Reported previous tab {reportedPreviousKey.Value.WindowId}:{reportedPreviousKey.Value.TabId} does not match tracked active tab {_currentActiveTab.Value.WindowId}:{_currentActiveTab.Value.TabId}. Trusting tracked active tab for remember flow.");
+                $"[als-host] Tab switch: reported previous={FormatTab(reportedPreviousKey)} mismatched tracked={FormatTab(_currentActiveTab)}; using tracked tab.");
         }
 
         var tabToRemember = _currentActiveTab ?? reportedPreviousKey;
+        Console.Error.WriteLine(
+            $"[als-host] Tab switch: previous={FormatTab(tabToRemember)} current={FormatTab(currentKey)}.");
 
         if (tabToRemember is not null &&
             tabToRemember.Value != currentKey &&
@@ -159,17 +164,22 @@ internal sealed class NativeMessagingHost
         {
             _rememberedLayouts[tabToRemember.Value] = currentLayoutId;
             Console.Error.WriteLine(
-                $"[als-host] Remembered layout '{currentLayoutId}' for tab {tabToRemember.Value.WindowId}:{tabToRemember.Value.TabId}.");
+                $"[als-host] Remember: tab={FormatTab(tabToRemember)} layout={currentLayoutId}.");
         }
         else if (tabToRemember is not null && tabToRemember.Value == currentKey)
         {
             Console.Error.WriteLine(
-                $"[als-host] Skipped remembering layout because tracked previous tab {tabToRemember.Value.WindowId}:{tabToRemember.Value.TabId} is the same as the current tab.");
+                $"[als-host] Remember ignored: previous tab {FormatTab(tabToRemember)} is the same as current.");
+        }
+        else if (tabToRemember is not null)
+        {
+            Console.Error.WriteLine(
+                $"[als-host] Remember ignored: no current layout available for previous tab {FormatTab(tabToRemember)}.");
         }
 
         if (!_rememberedLayouts.TryGetValue(currentKey, out var layoutId))
         {
-            Console.Error.WriteLine($"[als-host] No remembered layout for tab {currentKey.WindowId}:{currentKey.TabId}.");
+            Console.Error.WriteLine($"[als-host] Restore skipped: no remembered layout for {FormatTab(currentKey)}.");
             _currentActiveTab = currentKey;
             return;
         }
@@ -180,12 +190,9 @@ internal sealed class NativeMessagingHost
 
     private async Task HandleChromeFocusReturnedAsync(HostMessage message, CancellationToken cancellationToken)
     {
-        Console.Error.WriteLine(
-            $"[als-host] chrome_focus_returned currentWindowId={message.Payload.CurrentWindowId?.ToString() ?? "null"} currentTabId={message.Payload.CurrentTabId?.ToString() ?? "null"}");
-
         if (_currentActiveTab is null)
         {
-            Console.Error.WriteLine("[als-host] Ignoring chrome_focus_returned because no active tab is tracked.");
+            Console.Error.WriteLine("[als-host] Focus return ignored: no active tab is tracked.");
             return;
         }
 
@@ -199,17 +206,18 @@ internal sealed class NativeMessagingHost
             if (reportedCurrentKey != _currentActiveTab.Value)
             {
                 Console.Error.WriteLine(
-                    $"[als-host] Ignoring chrome_focus_returned for tab {reportedCurrentKey.WindowId}:{reportedCurrentKey.TabId} because tracked active tab is {_currentActiveTab.Value.WindowId}:{_currentActiveTab.Value.TabId}.");
+                    $"[als-host] Focus return ignored: reported={FormatTab(reportedCurrentKey)} tracked={FormatTab(_currentActiveTab)}.");
                 return;
             }
         }
 
         var currentKey = _currentActiveTab.Value;
+        Console.Error.WriteLine($"[als-host] Focus return: tab={FormatTab(currentKey)}.");
         var currentLayoutId = _keyboardLayoutService.GetCurrentLayoutId();
 
         if (!_rememberedLayouts.TryGetValue(currentKey, out var layoutId))
         {
-            Console.Error.WriteLine($"[als-host] No remembered layout for focused tab {currentKey.WindowId}:{currentKey.TabId}.");
+            Console.Error.WriteLine($"[als-host] Focus return restore skipped: no remembered layout for {FormatTab(currentKey)}.");
             return;
         }
 
@@ -225,7 +233,7 @@ internal sealed class NativeMessagingHost
         if (string.Equals(layoutId, currentLayoutId, StringComparison.OrdinalIgnoreCase))
         {
             Console.Error.WriteLine(
-                $"[als-host] Layout '{layoutId}' already active for tab {currentKey.WindowId}:{currentKey.TabId}.");
+                $"[als-host] Restore skipped: tab={FormatTab(currentKey)} already has layout={layoutId}.");
 
             await SendAsync(new HostMessage
             {
@@ -242,9 +250,10 @@ internal sealed class NativeMessagingHost
             return;
         }
 
+        Console.Error.WriteLine($"[als-host] Restore: tab={FormatTab(currentKey)} layout={layoutId}.");
         var result = _keyboardLayoutService.TrySwitchTo(layoutId);
         Console.Error.WriteLine(
-            $"[als-host] Restore result for tab {currentKey.WindowId}:{currentKey.TabId}: layout='{layoutId}', result={result}.");
+            $"[als-host] Restore result: tab={FormatTab(currentKey)} layout={layoutId} result={result}.");
 
         await SendAsync(new HostMessage
         {
@@ -269,19 +278,24 @@ internal sealed class NativeMessagingHost
     {
         if (message.Payload.WindowId is null || message.Payload.TabId is null)
         {
-            Console.Error.WriteLine("[als-host] Ignoring tab_closed without windowId/tabId.");
+            Console.Error.WriteLine("[als-host] Tab close ignored: missing windowId/tabId.");
             return;
         }
 
         var key = new TabKey(message.Payload.WindowId.Value, message.Payload.TabId.Value);
         _rememberedLayouts.Remove(key);
-        Console.Error.WriteLine($"[als-host] Cleared remembered layout for closed tab {key.WindowId}:{key.TabId}.");
+        Console.Error.WriteLine($"[als-host] Tab closed: cleared remembered layout for {FormatTab(key)}.");
 
         if (_currentActiveTab is not null && _currentActiveTab.Value == key)
         {
             _currentActiveTab = null;
-            Console.Error.WriteLine($"[als-host] Cleared current active tab because tab {key.WindowId}:{key.TabId} was closed.");
+            Console.Error.WriteLine($"[als-host] Active tab cleared because {FormatTab(key)} was closed.");
         }
+    }
+
+    private static string FormatTab(TabKey? key)
+    {
+        return key is null ? "null" : $"{key.Value.WindowId}:{key.Value.TabId}";
     }
 
     private async Task<HostMessage?> ReadMessageAsync(CancellationToken cancellationToken)
