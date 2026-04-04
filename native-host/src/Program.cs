@@ -6,17 +6,19 @@ internal static class Program
     {
         try
         {
-            Console.Error.WriteLine("[als-host] Startup.");
+            HostLogger.Initialize();
+            HostLogger.Log(
+                $"[als-host] Startup. exe={Environment.ProcessPath ?? "unknown"} baseDir={AppContext.BaseDirectory} cwd={Environment.CurrentDirectory}");
             using var input = Console.OpenStandardInput();
             using var output = Console.OpenStandardOutput();
 
             var host = new NativeMessagingHost(input, output);
             await host.RunAsync(CancellationToken.None);
-            Console.Error.WriteLine("[als-host] Shutdown.");
+            HostLogger.Log("[als-host] Shutdown.");
         }
         catch (Exception exception)
         {
-            Console.Error.WriteLine($"[als-host] Fatal error: {exception}");
+            HostLogger.Log($"[als-host] Fatal error: {exception}");
             Environment.ExitCode = 1;
         }
     }

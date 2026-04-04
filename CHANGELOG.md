@@ -6,7 +6,11 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 ## [Unreleased]
 
-- No unreleased changes documented yet.
+### Fixed
+
+- Improved Windows 11 active-layout observation and stable KLID resolution in the native host.
+- Prevented transient/raw HKLs from surviving as final remembered, stored, or restore-target layout values.
+- Added stronger native-host logging plus restore verification/retry behavior for Windows runtime diagnostics.
 
 ## [0.2.0]
 
@@ -41,4 +45,3 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 ### Notes
 
 - Chrome installation remained unpacked and manual; the final `Load unpacked` step was required.
-
