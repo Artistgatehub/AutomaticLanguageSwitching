@@ -4,7 +4,7 @@ This folder contains packaging and release files for the Windows installer.
 
 ## Payload Layout Convention
 
-Future installer payloads are staged under:
+Installer payloads are staged under:
 
 - `installer/windows/payload/native-host`
 - `installer/windows/payload/extension-unpacked`
@@ -36,11 +36,11 @@ Recommended installed paths:
 - `prepare-native-host.ps1` stages published native host output into `installer/windows/payload/native-host`
 - `prepare-extension.ps1` stages a clean unpacked extension folder into `installer/windows/payload/extension-unpacked`
 
-## What Still Remains After The First Public Installer Release
+## Current Release Workflow Notes
 
-- define the final install location and upgrade behavior
-- improve the end-user guidance flow for loading the unpacked extension in Chrome
-- add signing, versioning, and release automation if needed
+- the installed paths are `%LOCALAPPDATA%\AutomaticLanguageSwitching\NativeHost` and `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`
+- the final Chrome `Load unpacked` step remains manual
+- signing and GitHub release publishing are handled manually today; they are not automated by the repository
 
 ## Inno Setup Build Notes
 

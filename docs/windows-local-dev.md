@@ -8,7 +8,7 @@ The native host accepts keyboard layouts in Windows KLID format:
 - uppercase in docs and on the wire
 - examples: `00000409`, `00000422`, `00010409`
 
-For MVP v1, assignments are stored exactly as KLIDs.
+Remembered layouts are stored in memory as normalized stable KLIDs for the current Chrome session only.
 
 The native host treats the runtime-loaded keyboard layout list from `GetKeyboardLayoutList` as the primary source of truth because it reflects layouts currently loaded in the Windows session. If that call returns no layouts, the host falls back to `HKCU\Keyboard Layout\Preload` plus `Substitutes`, which is a reasonable approximation but not a perfect runtime guarantee.
 
@@ -76,15 +76,17 @@ reg add "HKCU\Software\Google\Chrome\NativeMessagingHosts\com.automaticlanguages
 6. Create the `HKCU\Software\Google\Chrome\NativeMessagingHosts\com.automaticlanguageswitching.host` registry entry pointing to that manifest.
 7. Reload the extension.
 8. Open the service worker console and verify `hello_ack` arrives from the host.
-9. Use the demo commands to assign layouts to two tabs.
-10. Switch between those tabs and observe `layout_restore_result` messages.
+9. Open two normal web tabs, type with different layouts in each tab, and switch back and forth.
+10. Observe `layout_restore_result` messages and confirm the typed input matches the expected layout in each tab.
 
 ## WinAPI Notes
 
 The host uses this path on Windows:
 
+- `GetForegroundWindow` and `GetWindowThreadProcessId` to identify the active Chrome-side input context
+- `GetKeyboardLayout` and `GetKeyboardLayoutNameW` to observe the active layout
 - `GetKeyboardLayoutList` to enumerate layouts currently loaded in the session
 - `LoadKeyboardLayoutW` to resolve the target KLID into an `HKL`
-- `SendMessageTimeout(..., WM_INPUTLANGCHANGEREQUEST, ...)` to ask the foreground Chrome window to switch input language
+- `ActivateKeyboardLayout` plus `SendMessageTimeout(..., WM_INPUTLANGCHANGEREQUEST, ...)` during restore
 
 The switch request is sent to the foreground window because the native host process does not own Chrome's UI thread. As a small MVP safeguard, the host only sends the request if the current foreground process is still `chrome.exe`.

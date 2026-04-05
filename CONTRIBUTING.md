@@ -71,8 +71,4 @@ For pull requests:
 
 ## Notes
 
-Future additions that may be useful:
-
-- issue templates
-- a pull request template
-
+- issue templates and a pull request template are available under [`.github/`](./.github/)

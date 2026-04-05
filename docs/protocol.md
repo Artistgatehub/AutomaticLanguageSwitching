@@ -28,44 +28,43 @@ Sent once after the extension connects.
 }
 ```
 
-### `tab_activated`
+### `tab_switched`
 
-Sent whenever Chrome activates a tab.
-
-```json
-{
-  "version": 1,
-  "type": "tab_activated",
-  "payload": {
-    "windowId": 1,
-    "tabId": 42
-  }
-}
-```
-
-### `assign_layout`
-
-Dev-only message used to seed an in-memory mapping for the current MVP.
+Sent when Chrome changes the active tab in a window.
 
 ```json
 {
   "version": 1,
-  "type": "assign_layout",
+  "type": "tab_switched",
   "payload": {
-    "windowId": 1,
-    "tabId": 42,
-    "layoutId": "00000409"
+    "previousWindowId": 1,
+    "previousTabId": 41,
+    "currentWindowId": 1,
+    "currentTabId": 42
   }
 }
 ```
 
-`layoutId` is the Windows keyboard layout identifier string to restore later.
-For MVP v1, the accepted format is an 8-character uppercase hexadecimal KLID, for example `00000409` (`en-US`) or `00000422` (`uk-UA`).
-The native host normalizes incoming values to uppercase and rejects any other format.
+The host uses the previous tab key to remember the layout being left, then tries to restore the remembered layout for the current tab.
+
+### `chrome_focus_returned`
+
+Sent when Chrome regains focus on the already-active tab after focus returns from another Windows application.
+
+```json
+{
+  "version": 1,
+  "type": "chrome_focus_returned",
+  "payload": {
+    "currentWindowId": 1,
+    "currentTabId": 42
+  }
+}
+```
 
 ### `tab_closed`
 
-Sent when Chrome removes a tab. The native host uses it only to clear the in-memory assignment for that runtime tab key.
+Sent when Chrome removes a tab. The host uses it to clear any in-memory remembered layout for that runtime tab key.
 
 ```json
 {
@@ -88,14 +87,34 @@ Sent when Chrome removes a tab. The native host uses it only to clear the in-mem
   "type": "hello_ack",
   "payload": {
     "hostVersion": "0.2.0",
-    "platform": "windows"
+    "platform": "windows",
+    "perAppInputMethodEnabled": true,
+    "attemptedAutoEnable": false
+  }
+}
+```
+
+`perAppInputMethodEnabled` and `attemptedAutoEnable` describe the startup check for the Windows per-app input-method setting.
+
+### `warning`
+
+Sent when the host needs to report a non-fatal problem, such as the Windows per-app input-method setting still being disabled after the startup check.
+
+```json
+{
+  "version": 1,
+  "type": "warning",
+  "payload": {
+    "message": "Windows per-app input method setting is disabled and could not be enabled automatically.",
+    "perAppInputMethodEnabled": false,
+    "attemptedAutoEnable": true
   }
 }
 ```
 
 ### `layout_restore_result`
 
-Returned after handling `tab_activated` when an assignment exists.
+Returned after the host handles `tab_switched` or `chrome_focus_returned`.
 
 ```json
 {
@@ -110,29 +129,19 @@ Returned after handling `tab_activated` when an assignment exists.
 }
 ```
 
+`layoutId` is the final stable KLID the host used for the restore decision. It is normalized to an 8-digit uppercase KLID when present.
+
 `result` values:
+
 - `applied`
 - `unavailable`
 - `failed`
 
 Meaning:
-- `applied`: the host sent the switch request to the current foreground window
-- `unavailable`: the requested `layoutId` is not currently installed for the Windows user profile, or the format is invalid
-- `failed`: the layout is installed but Windows did not accept the switch request
 
-### `assign_layout_ack`
-
-```json
-{
-  "version": 1,
-  "type": "assign_layout_ack",
-  "payload": {
-    "windowId": 1,
-    "tabId": 42,
-    "layoutId": "00000409"
-  }
-}
-```
+- `applied`: the host verified the expected layout or determined it was already active
+- `unavailable`: the requested layout could not be resolved to an installed stable layout
+- `failed`: the host attempted restore, but verification did not confirm the expected layout
 
 ### `error`
 
@@ -145,3 +154,9 @@ Meaning:
   }
 }
 ```
+
+## Current State Notes
+
+- Layout memory is session-only. It is not persisted across a full Chrome restart.
+- The protocol does not include a dev-only `assign_layout` message in the current code.
+- The extension currently sends `hello`, `tab_switched`, `chrome_focus_returned`, and `tab_closed`.

@@ -56,6 +56,7 @@ When relevant, verify:
 - the native host still connects successfully
 - switching between tabs still restores the expected keyboard layout
 - returning from another Windows application back to Chrome still restores the expected layout
+- layout memory remains session-only across the current Chrome runtime
 - installer changes still produce a working Windows setup flow
 
 If your change affects user-visible behavior, also verify that the relevant docs still match the actual flow.
@@ -68,3 +69,6 @@ If your change affects user-visible behavior, also verify that the relevant docs
 - [`docs/protocol.md`](./protocol.md) for the Native Messaging protocol
 - [`docs/windows-local-dev.md`](./windows-local-dev.md) for Windows-specific local development notes
 
+## Current Protocol Reminder
+
+The current Native Messaging flow uses `hello`, `tab_switched`, `chrome_focus_returned`, and `tab_closed` from the extension, plus `hello_ack`, `warning`, `layout_restore_result`, and `error` from the host. Use [`docs/protocol.md`](./protocol.md) as the source of truth for the current message shapes.

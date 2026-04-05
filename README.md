@@ -4,11 +4,18 @@
 
 ![Windows](https://img.shields.io/badge/platform-Windows-0078D6)
 ![Chrome](https://img.shields.io/badge/browser-Chrome-4285F4)
-![Version](https://img.shields.io/badge/version-v0.2.0-2ea44f)
+![Version](https://img.shields.io/badge/version-v0.2.1-2ea44f)
 
 AutomaticLanguageSwitching is a Windows-only tool for multilingual Chrome users who switch keyboard layouts often. It remembers the active Windows keyboard layout for each Chrome tab during the current browser session and restores that layout when you return to the tab.
 
 It works through a Chrome extension plus a Windows Native Messaging host. The installer sets up the native host and prepares the unpacked extension folder locally, but the final Chrome `Load unpacked` step is still manual.
+
+## Current Status
+
+- Windows-only
+- Latest release: `v0.2.1`
+- Installer available from GitHub Releases
+- Recently stabilized for both Windows 10 and Windows 11
 
 ## Demo
 
@@ -47,12 +54,12 @@ AutomaticLanguageSwitching reduces that friction by remembering the layout you u
 4. The native host restores the remembered layout for the tab you are entering, if one is known.
 5. When focus returns from another Windows application back to the same Chrome tab, the host restores that tab's remembered layout again.
 
-## ⚙️ Installation
+## Installation
 
 ![Installation flow](assets/readme/install-load-unpacked.png)
 
-1. Download `AutomaticLanguageSwitching-Setup.exe` from GitHub Releases.
-2. Run the installer.
+1. Download the latest installer from GitHub Releases.
+2. Run the installer to install the native host and prepare the extension files.
 3. The installer:
    - installs the Windows native host
    - best-effort enables the Windows setting `Let me use a different input method for each app window`
@@ -63,6 +70,7 @@ AutomaticLanguageSwitching reduces that friction by remembering the layout you u
 6. Click `Load unpacked`.
 7. Select `%LOCALAPPDATA%\AutomaticLanguageSwitching\Extension`.
 8. If the toolbar icon is not visible, open Chrome's Extensions menu and pin `Automatic Language Switching` manually.
+9. If layout restore seems inconsistent, verify that `Let me use a different input method for each app window` is enabled in Windows.
 
 ## Usage
 
@@ -73,7 +81,7 @@ AutomaticLanguageSwitching reduces that friction by remembering the layout you u
 
 The extension remembers layouts during the current Chrome session and restores them when you return to tabs that already have a remembered layout.
 
-## ⚠️ Important Notes and Limitations
+## Important Notes and Limitations
 
 - Windows only
 - Chrome only
@@ -82,9 +90,15 @@ The extension remembers layouts during the current Chrome session and restores t
 - Toolbar pinning is manual; Chrome controls that
 - Session-only memory is intentional
 - Layout memory is not persisted across a full Chrome restart
-- No Chrome Web Store distribution is planned right now
+- No Chrome Web Store distribution
 
-## 🛠️ Troubleshooting
+## Troubleshooting
+
+Before reinstalling or updating:
+
+- close Chrome completely
+- use the latest installer from GitHub Releases
+- if needed, remove `%LOCALAPPDATA%\AutomaticLanguageSwitching\NativeHost` before reinstalling
 
 If layout restore is inconsistent:
 
@@ -99,7 +113,14 @@ If the Windows per-app input setting was disabled later, the native host will tr
 
 ## Release and Distribution
 
-The current public release line is `v0.2.0`.
+The current public release line is `v0.2.1`.
+
+`v0.2.1` includes:
+
+- improved Windows 11 active-layout observation and resolution
+- stronger stable KLID normalization and finalization
+- transient and raw HKLs no longer survive as final remembered, stored, or restore values
+- improved native-host logging plus restore verification and retry behavior
 
 Distribution model:
 
