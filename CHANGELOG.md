@@ -6,11 +6,24 @@ The format is inspired by [Keep a Changelog](https://keepachangelog.com/en/1.1.0
 
 ## [Unreleased]
 
+- No unreleased changes yet.
+
+## [0.2.1] - 2026-04-04
+
+### Added
+
+- Fixed-path native-host file logging for installed-host diagnostics.
+
+### Changed
+
+- Strengthened native-host restore verification and retry behavior for Windows runtime diagnostics.
+- Normalized final stable KLID handling for remembered, stored, restore-target, and extension-facing layout values.
+
 ### Fixed
 
 - Improved Windows 11 active-layout observation and stable KLID resolution in the native host.
 - Prevented transient/raw HKLs from surviving as final remembered, stored, or restore-target layout values.
-- Added stronger native-host logging plus restore verification/retry behavior for Windows runtime diagnostics.
+- Prevented failed restore flows from immediately poisoning remembered tab layouts on the next switch-away.
 
 ## [0.2.0]
 
