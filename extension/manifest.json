@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Automatic Language Switching",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAuPIw1jFCEP0cF1F1SSDrSfBZ5Eem0d72LZP/ftzk5ASgv8Xi4ofXfisVW5qOMR6qzd3emKOz4fyX56TVCB9tPrZ8ULWRn9uhHrCpvmV+GA0R0sLM0il/cd5SPBdx127JZTIeO4Jk0va0jBPIFfbDYIDPnKzlXid4jG+WK66+ORdJJcu8Wor9869uHKkTaXLNbY02e7ewdH7j5IxlVgwaLOTHHU9k4kQ0Pr9LvZzI18MCB8l7dlbqM4nqatMmnjxjSwkUjV2Ovqbj1QOJa6fS+9PAjJtdujyjgGa8rQqnc2oTVvtdAquMdmbWP75ufClsI5Z0Zdnfu1PWoqWF3ntvCQIDAQAB",
   "description": "Restores an assigned keyboard layout when the active Chrome tab changes.",
   "icons": {

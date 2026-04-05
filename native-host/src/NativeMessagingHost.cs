@@ -60,7 +60,7 @@ internal sealed class NativeMessagingHost
                     Type = "hello_ack",
                     Payload = new MessagePayload
                     {
-                        HostVersion = "0.2.0",
+                        HostVersion = "0.2.1",
                         Platform = "windows",
                         PerAppInputMethodEnabled = _perAppInputMethodStatus.IsEnabled,
                         AttemptedAutoEnable = _perAppInputMethodStatus.AttemptedAutoEnable
