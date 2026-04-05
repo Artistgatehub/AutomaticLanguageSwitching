@@ -58,8 +58,22 @@ body:
     id: project-version
     attributes:
       label: Project or release version
-      description: If known, for example v0.2.0.
-      placeholder: v0.2.0
+      description: If known, for example v0.2.1.
+      placeholder: v0.2.1
+
+  - type: textarea
+    id: beta-feedback-pack
+    attributes:
+      label: Beta feedback pack
+      description: For beta reports, include the extension console log and the native host log from %LOCALAPPDATA%\AutomaticLanguageSwitching\NativeHost\als-native-host.log.
+      placeholder: |
+        Windows version:
+        Release version:
+        Expected behavior:
+        Actual behavior:
+        Extension console log:
+        Native host log:
+      render: text
 
   - type: dropdown
     id: install-method
@@ -107,6 +121,5 @@ body:
     id: logs
     attributes:
       label: Logs or screenshots
-      description: Paste relevant service worker logs, native host logs, screenshots, or error messages if available.
+      description: Paste relevant service worker logs, native host logs, screenshots, or error messages if available. For beta issues, include both the extension console log and %LOCALAPPDATA%\AutomaticLanguageSwitching\NativeHost\als-native-host.log.
       render: text
-

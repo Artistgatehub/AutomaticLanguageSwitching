@@ -111,6 +111,19 @@ If layout restore is inconsistent:
 
 If the Windows per-app input setting was disabled later, the native host will try to enable it again at runtime. If that still fails, the extension logs a warning in the service worker console.
 
+## Reporting Problems
+
+For beta feedback or bug reports, include:
+
+- Windows version
+- release version
+- expected behavior
+- actual behavior
+- extension console log
+- `%LOCALAPPDATA%\AutomaticLanguageSwitching\NativeHost\als-native-host.log`
+
+See [`docs/beta-testing.md`](./docs/beta-testing.md) for a short beta test checklist and feedback guide.
+
 ## Release and Distribution
 
 The current public release line is `v0.2.1`.
