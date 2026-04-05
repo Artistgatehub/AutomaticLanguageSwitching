@@ -7,7 +7,7 @@ using Microsoft.Win32;
 
 namespace AutomaticLanguageSwitching.NativeHost;
 
-internal sealed class KeyboardLayoutService
+internal sealed class KeyboardLayoutService : IKeyboardLayoutService
 {
     private const uint SpiGetThreadLocalInputSettings = 0x104E;
     private const uint SpiSetThreadLocalInputSettings = 0x104F;
@@ -22,13 +22,26 @@ internal sealed class KeyboardLayoutService
 
     private static readonly int[] VerificationOffsetsMs = [0, 50, 150, 300];
     private static readonly TimeSpan InstalledLayoutsCacheTtl = TimeSpan.FromSeconds(5);
-    private static readonly Regex LayoutIdPattern = new("^[0-9A-F]{8}$", RegexOptions.Compiled);
-
     private readonly object _cacheLock = new();
+    private readonly Func<IReadOnlyCollection<string>> _installedLayoutIdsProvider;
+    private readonly Func<IReadOnlyCollection<string>> _configuredLayoutIdsProvider;
     private IReadOnlyCollection<string>? _installedLayoutIdsCache;
     private DateTimeOffset _installedLayoutIdsCachedAt = DateTimeOffset.MinValue;
     private IReadOnlyCollection<string>? _configuredLayoutIdsCache;
     private DateTimeOffset _configuredLayoutIdsCachedAt = DateTimeOffset.MinValue;
+
+    public KeyboardLayoutService()
+        : this(ReadInstalledLayoutIds, ReadInstalledLayoutIdsFromRegistry)
+    {
+    }
+
+    internal KeyboardLayoutService(
+        Func<IReadOnlyCollection<string>> installedLayoutIdsProvider,
+        Func<IReadOnlyCollection<string>> configuredLayoutIdsProvider)
+    {
+        _installedLayoutIdsProvider = installedLayoutIdsProvider;
+        _configuredLayoutIdsProvider = configuredLayoutIdsProvider;
+    }
 
     public IReadOnlyCollection<string> GetInstalledLayoutIds()
     {
@@ -40,7 +53,7 @@ internal sealed class KeyboardLayoutService
                 return _installedLayoutIdsCache;
             }
 
-            _installedLayoutIdsCache = ReadInstalledLayoutIds();
+            _installedLayoutIdsCache = _installedLayoutIdsProvider();
             _installedLayoutIdsCachedAt = DateTimeOffset.UtcNow;
 
             return _installedLayoutIdsCache;
@@ -57,7 +70,7 @@ internal sealed class KeyboardLayoutService
                 return _configuredLayoutIdsCache;
             }
 
-            _configuredLayoutIdsCache = ReadInstalledLayoutIdsFromRegistry();
+            _configuredLayoutIdsCache = _configuredLayoutIdsProvider();
             _configuredLayoutIdsCachedAt = DateTimeOffset.UtcNow;
 
             return _configuredLayoutIdsCache;
@@ -185,7 +198,7 @@ internal sealed class KeyboardLayoutService
     {
         var configuredLayoutIds = GetConfiguredLayoutIds();
         var installedLayoutIds = GetInstalledLayoutIds();
-        var resolution = ResolveStableLayoutCandidate("storage", layoutId, configuredLayoutIds, installedLayoutIds);
+        var resolution = KeyboardLayoutRules.ResolveStableLayoutCandidate("storage", layoutId, configuredLayoutIds, installedLayoutIds);
         return resolution.LayoutId;
     }
 
@@ -199,7 +212,7 @@ internal sealed class KeyboardLayoutService
 
         foreach (var candidate in GetObservationCandidates(rawLayoutId, canonicalLayoutId, keyboardLayoutNameLayoutId))
         {
-            var resolution = ResolveStableLayoutCandidate(candidate.Source, candidate.LayoutId, configuredLayoutIds, installedLayoutIds);
+            var resolution = KeyboardLayoutRules.ResolveStableLayoutCandidate(candidate.Source, candidate.LayoutId, configuredLayoutIds, installedLayoutIds);
             if (resolution.LayoutId is not null)
             {
                 HostLogger.Log(
@@ -214,51 +227,6 @@ internal sealed class KeyboardLayoutService
         return new StableLayoutResolution(null, "none");
     }
 
-    private StableLayoutResolution ResolveStableLayoutCandidate(
-        string source,
-        string? candidateLayoutId,
-        IReadOnlyCollection<string> configuredLayoutIds,
-        IReadOnlyCollection<string> installedLayoutIds)
-    {
-        var normalized = NormalizeLayoutId(candidateLayoutId ?? string.Empty);
-        if (normalized is null)
-        {
-            return new StableLayoutResolution(null, $"{source}:invalid");
-        }
-
-        var stableConfiguredLayoutIds = GetStrictStableLayoutIds(configuredLayoutIds);
-        var stableInstalledLayoutIds = GetStrictStableLayoutIds(installedLayoutIds);
-        var finalizedExact = FinalizeStableLayoutId(normalized, stableConfiguredLayoutIds, stableInstalledLayoutIds);
-
-        if (finalizedExact is not null && string.Equals(finalizedExact, normalized, StringComparison.OrdinalIgnoreCase))
-        {
-            return new StableLayoutResolution(finalizedExact, $"{source}:stable-exact");
-        }
-
-        var canonical = GetPreferredRestoreLayoutId(normalized);
-        var finalizedCanonical = FinalizeStableLayoutId(canonical, stableConfiguredLayoutIds, stableInstalledLayoutIds);
-        if (finalizedCanonical is not null)
-        {
-            return new StableLayoutResolution(finalizedCanonical, $"{source}:stable-canonical");
-        }
-
-        var languageFallback = GetLanguageFallbackLayoutId(normalized);
-        var finalizedLanguageFallback = FinalizeStableLayoutId(languageFallback, stableConfiguredLayoutIds, stableInstalledLayoutIds);
-        if (finalizedLanguageFallback is not null)
-        {
-            return new StableLayoutResolution(finalizedLanguageFallback, $"{source}:stable-language");
-        }
-
-        var lowWordMatch = FindLayoutByLanguageSuffix(normalized, stableConfiguredLayoutIds)
-            ?? FindLayoutByLanguageSuffix(normalized, stableInstalledLayoutIds);
-        if (lowWordMatch is not null)
-        {
-            return new StableLayoutResolution(lowWordMatch, $"{source}:suffix-match");
-        }
-
-        return new StableLayoutResolution(null, $"{source}:transient-or-non-normalized");
-    }
-
     private static IEnumerable<(string Source, string? LayoutId)> GetObservationCandidates(
         string rawLayoutId,
         string canonicalLayoutId,
@@ -271,66 +239,6 @@ internal sealed class KeyboardLayoutService
         {
             yield return ("getkeyboardlayoutname", keyboardLayoutNameLayoutId);
         }
-    }
-
-    private static string? FindLayoutByLanguageSuffix(string layoutId, IEnumerable<string> candidates)
-    {
-        var suffix = layoutId[4..];
-        return candidates
-            .Where(candidate => candidate.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
-            .OrderBy(candidate => candidate, StringComparer.OrdinalIgnoreCase)
-            .FirstOrDefault();
-    }
-
-    private static HashSet<string> GetStrictStableLayoutIds(IEnumerable<string> layoutIds)
-    {
-        var stableLayoutIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-        foreach (var layoutId in layoutIds)
-        {
-            var strictStableLayoutId = TryNormalizeToStrictStableKlid(layoutId);
-            if (strictStableLayoutId is not null)
-            {
-                stableLayoutIds.Add(strictStableLayoutId);
-            }
-        }
-
-        return stableLayoutIds;
-    }
-
-    private static string? FinalizeStableLayoutId(
-        string? candidateLayoutId,
-        IReadOnlyCollection<string> stableConfiguredLayoutIds,
-        IReadOnlyCollection<string> stableInstalledLayoutIds)
-    {
-        var strictStableLayoutId = TryNormalizeToStrictStableKlid(candidateLayoutId);
-        if (strictStableLayoutId is null)
-        {
-            return null;
-        }
-
-        if (stableConfiguredLayoutIds.Contains(strictStableLayoutId, StringComparer.OrdinalIgnoreCase))
-        {
-            return strictStableLayoutId;
-        }
-
-        if (stableInstalledLayoutIds.Contains(strictStableLayoutId, StringComparer.OrdinalIgnoreCase))
-        {
-            return strictStableLayoutId;
-        }
-
-        return null;
-    }
-
-    private static string? TryNormalizeToStrictStableKlid(string? layoutId)
-    {
-        var normalized = NormalizeLayoutId(layoutId ?? string.Empty);
-        if (normalized is null)
-        {
-            return null;
-        }
-
-        return GetLanguageFallbackLayoutId(normalized);
     }
 
     public LayoutSwitchAttemptResult TrySwitchTo(string layoutId, RestoreAttemptContext context)
@@ -495,16 +403,7 @@ internal sealed class KeyboardLayoutService
         return result;
     }
 
-    public static string? NormalizeLayoutId(string layoutId)
-    {
-        if (string.IsNullOrWhiteSpace(layoutId))
-        {
-            return null;
-        }
-
-        var normalized = layoutId.Trim().ToUpperInvariant();
-        return LayoutIdPattern.IsMatch(normalized) ? normalized : null;
-    }
+    public static string? NormalizeLayoutId(string layoutId) => KeyboardLayoutRules.NormalizeLayoutId(layoutId);
 
     private static IReadOnlyCollection<string> ReadInstalledLayoutIds()
     {
@@ -593,7 +492,7 @@ internal sealed class KeyboardLayoutService
             return normalized;
         }
 
-        var languageFallback = GetLanguageFallbackLayoutId(normalized);
+        var languageFallback = KeyboardLayoutRules.GetLanguageFallbackLayoutId(normalized);
         if (configuredLayoutIds.Contains(languageFallback, StringComparer.OrdinalIgnoreCase))
         {
             return languageFallback;
@@ -675,16 +574,11 @@ internal sealed class KeyboardLayoutService
     {
         yield return targetLayoutId;
 
-        var languageFallback = GetLanguageFallbackLayoutId(targetLayoutId);
+        var languageFallback = KeyboardLayoutRules.GetLanguageFallbackLayoutId(targetLayoutId);
         if (!string.Equals(languageFallback, targetLayoutId, StringComparison.OrdinalIgnoreCase))
         {
             yield return languageFallback;
         }
-    }
-
-    private static string GetLanguageFallbackLayoutId(string layoutId)
-    {
-        return $"0000{layoutId[4..]}";
     }
 
     private static string? TryGetKeyboardLayoutNameLayoutId()

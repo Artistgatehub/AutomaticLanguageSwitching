@@ -15,7 +15,7 @@ internal sealed class NativeMessagingHost
     private readonly Stream _output;
     private readonly Dictionary<TabKey, string> _rememberedLayouts = new();
     private readonly HashSet<TabKey> _skipRememberOverwriteOnce = [];
-    private readonly KeyboardLayoutService _keyboardLayoutService = new();
+    private readonly IKeyboardLayoutService _keyboardLayoutService;
     private readonly PerAppInputMethodStatus _perAppInputMethodStatus;
     private TabKey? _currentActiveTab;
 
@@ -23,7 +23,20 @@ internal sealed class NativeMessagingHost
     {
         _input = input;
         _output = output;
+        _keyboardLayoutService = new KeyboardLayoutService();
         _perAppInputMethodStatus = EnsurePerAppInputMethodSetting();
+    }
+
+    internal NativeMessagingHost(
+        Stream input,
+        Stream output,
+        IKeyboardLayoutService keyboardLayoutService,
+        PerAppInputMethodStatus perAppInputMethodStatus)
+    {
+        _input = input;
+        _output = output;
+        _keyboardLayoutService = keyboardLayoutService;
+        _perAppInputMethodStatus = perAppInputMethodStatus;
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
