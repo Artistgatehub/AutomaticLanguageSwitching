@@ -403,6 +403,21 @@ internal sealed class KeyboardLayoutService : IKeyboardLayoutService
         return result;
     }
 
+    internal bool TryLoadKeyboardLayoutForSmokeTest(
+        string layoutId,
+        out string? finalTargetLayoutId,
+        out LoadKeyboardLayoutResolution loadResolution)
+    {
+        finalTargetLayoutId = TryGetStableLayoutIdForStorage(layoutId);
+        if (finalTargetLayoutId is null)
+        {
+            loadResolution = default;
+            return false;
+        }
+
+        return TryLoadKeyboardLayoutHandle(finalTargetLayoutId, out loadResolution);
+    }
+
     public static string? NormalizeLayoutId(string layoutId) => KeyboardLayoutRules.NormalizeLayoutId(layoutId);
 
     private static IReadOnlyCollection<string> ReadInstalledLayoutIds()
